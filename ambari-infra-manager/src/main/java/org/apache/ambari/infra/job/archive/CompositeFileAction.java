@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,24 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.solr.commands;
+package org.apache.ambari.infra.job.archive;
 
-import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.Slice;
-import org.apache.solr.common.cloud.ZkStateReader;
+import java.io.File;
+import java.util.List;
 
-import java.util.Collection;
+import static java.util.Arrays.asList;
 
-public class GetShardsCommand extends AbstractRetryCommand<Collection<Slice>> {
+public class CompositeFileAction implements FileAction {
 
-  public GetShardsCommand(int maxRetries, int interval) {
-    super(maxRetries, interval);
+  private final List<FileAction> actions;
+
+  public CompositeFileAction(FileAction... actions) {
+    this.actions = asList(actions);
+  }
+
+  public void add(FileAction action) {
+    actions.add(action);
   }
 
   @Override
-  public Collection<Slice> createAndProcessRequest(AmbariSolrCloudClient solrCloudClient) throws Exception {
-    ZkStateReader zkReader = new ZkStateReader(solrCloudClient.getSolrZkClient());
-    zkReader.createClusterStateWatchersAndUpdate();
-    return zkReader.getClusterState().getCollection(solrCloudClient.getCollection()).getSlices();
+  public File perform(File inputFile) {
+    File file = inputFile;
+    for (FileAction action : actions) {
+      file = action.perform(file);
+    }
+    return file;
   }
 }

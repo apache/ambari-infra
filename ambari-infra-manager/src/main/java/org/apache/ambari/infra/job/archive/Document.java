@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,24 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.solr.commands;
+package org.apache.ambari.infra.job.archive;
 
-import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.Slice;
-import org.apache.solr.common.cloud.ZkStateReader;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-public class GetShardsCommand extends AbstractRetryCommand<Collection<Slice>> {
+import static java.util.Collections.unmodifiableMap;
 
-  public GetShardsCommand(int maxRetries, int interval) {
-    super(maxRetries, interval);
+// TODO: create entities for each solr collections
+public class Document {
+  private final Map<String, String> fieldMap;
+
+  private Document() {
+    fieldMap = new HashMap<>();
   }
 
-  @Override
-  public Collection<Slice> createAndProcessRequest(AmbariSolrCloudClient solrCloudClient) throws Exception {
-    ZkStateReader zkReader = new ZkStateReader(solrCloudClient.getSolrZkClient());
-    zkReader.createClusterStateWatchersAndUpdate();
-    return zkReader.getClusterState().getCollection(solrCloudClient.getCollection()).getSlices();
+  public Document(Map<String, String> fieldMap) {
+    this.fieldMap = unmodifiableMap(fieldMap);
+  }
+
+  public String get(String key) {
+    return fieldMap.get(key);
+  }
+
+  @JsonAnyGetter
+  private Map<String, String> getFieldMap() {
+    return fieldMap;
+  }
+
+  @JsonAnySetter
+  private void put(String key, String value) {
+    fieldMap.put(key, value);
   }
 }
