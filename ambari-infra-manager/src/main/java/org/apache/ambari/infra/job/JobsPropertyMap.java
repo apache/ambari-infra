@@ -16,20 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.job.archive;
+package org.apache.ambari.infra.job;
 
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 
-public class DocumentExportJobListener implements JobExecutionListener {
+import java.util.Map;
+
+public class JobsPropertyMap<T extends JobProperties<T>> implements JobExecutionListener {
+
+  private final Map<String, T> propertyMap;
+
+  public JobsPropertyMap(Map<String, T> propertyMap) {
+    this.propertyMap = propertyMap;
+  }
+
   @Override
   public void beforeJob(JobExecution jobExecution) {
+    try {
+      String jobName = jobExecution.getJobInstance().getJobName();
+      T defaultProperties = propertyMap.get(jobName);
+      if (defaultProperties == null)
+        throw new UnsupportedOperationException("Properties not found for job " + jobName);
 
+      T properties = defaultProperties.deepCopy();
+      properties.apply(jobExecution.getJobParameters());
+      properties.validate(jobName);
+      jobExecution.getExecutionContext().put("jobProperties", properties);
+    }
+    catch (UnsupportedOperationException | IllegalArgumentException ex) {
+      jobExecution.stop();
+      jobExecution.setExitStatus(new ExitStatus(ExitStatus.FAILED.getExitCode(), ex.getMessage()));
+      throw ex;
+    }
   }
 
   @Override
   public void afterJob(JobExecution jobExecution) {
-    jobExecution.setExitStatus(new ExitStatus(ExitStatus.COMPLETED.getExitCode()));
+
   }
 }

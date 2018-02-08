@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.job.archive;
+package org.apache.ambari.infra.conf.security;
 
-import java.util.Iterator;
+import java.util.Optional;
 
-// TODO: generic closeable iterator
-public interface DocumentIterator extends Iterator<Document>, AutoCloseable {
+public interface PasswordStore {
+  Optional<String> getPassword(String propertyName);
 }

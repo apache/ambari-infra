@@ -20,28 +20,19 @@ package org.apache.ambari.infra.job.archive;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
 
-public class DocumentExportStepListener implements StepExecutionListener {
-  private static final Logger LOG = LoggerFactory.getLogger(DocumentExportStepListener.class);
+import java.io.File;
 
-  private final DocumentExportProperties properties;
-
-  public DocumentExportStepListener(DocumentExportProperties properties) {
-    this.properties = properties;
-  }
+public abstract class AbstractFileAction implements FileAction {
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractFileAction.class);
 
   @Override
-  public void beforeStep(StepExecution stepExecution) {
-    properties.apply(stepExecution.getJobParameters());
-    LOG.info("LogExport step - before step execution");
+  public File perform(File inputFile) {
+    File outputFile =  onPerform(inputFile);
+    if (!inputFile.delete())
+      LOG.warn("File {} was not deleted. Exists: {}", inputFile.getAbsolutePath(), inputFile.exists());
+    return outputFile;
   }
 
-  @Override
-  public ExitStatus afterStep(StepExecution stepExecution) {
-    LOG.info("LogExport step - after step execution");
-    return stepExecution.getExitStatus();
-  }
+  protected abstract File onPerform(File inputFile);
 }
