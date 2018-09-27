@@ -4,6 +4,8 @@
 
 Core shared service used by Ambari managed components. (Infra Solr and Infra Manager)
 
+Ambari Infra is a sub-project of [Apache Ambari](https://github.com/apache/ambari)
+
 ## Development
 
 Requires JDK 8
