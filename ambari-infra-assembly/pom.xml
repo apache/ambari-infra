@@ -391,7 +391,7 @@
 
                     <copy file="${infra.solr.plugin.dir}/target/ambari-infra-solr-plugin-${project.version}.jar"
                           toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <copy file="${infra.solr.plugin.dir}/target/libs/ambari-metrics-common-${project.version}.jar"
+                    <copy file="${infra.solr.plugin.dir}/target/libs/ambari-metrics-common-${ambari-metrics.version}.jar"
                           toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
                     <copy file="${infra.solr.plugin.dir}/target/libs/commons-logging-1.1.1.jar"
                           toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
