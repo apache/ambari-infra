@@ -411,7 +411,7 @@
                 <image>
                   <name>apache/ambari-infra-solr:latest</name>
                   <build>
-                    <from>openjdk:10-jre</from>
+                    <from>openjdk:10-jdk</from>
                   </build>
                 </image>
               </images>
