@@ -13,13 +13,13 @@ FROM openjdk:10-jre
 MAINTAINER dev@ambari.apache.org
 
 RUN apt-get update && apt-get install -y python
-ADD jenkins/containers/infra-solr/bin /infra-solr/bin
-ADD jenkins/containers/infra-solr/conf /infra-solr/conf
-ADD ambari-infra-assembly/target/ambari-infra-solr_2.0.0.0-SNAPSHOT.deb /infra-solr/ambari-infra-solr.deb
-ADD ambari-infra-assembly/target/ambari-infra-solr-client_2.0.0.0-SNAPSHOT.deb /infra-solr/ambari-infra-solr-client.deb
-RUN dpkg -i /infra-solr/ambari-infra-solr.deb
-RUN dpkg -i /infra-solr/ambari-infra-solr-client.deb
-RUN mkdir -p /var/lib/ambari-infra-solr/data
+
+ADD bin /infra-solr/bin
+ADD conf /infra-solr/conf
+ADD solr /usr/lib/ambari-infra-solr
+ADD solr-client /usr/lib/ambari-infra-solr-client
+
+RUN mkdir -p /var/lib/ambari-infra-solr/data && mkdir -p /etc/ambari-infra-solr/conf
 
 ENV SOLR_USER="infra-solr"
 ENV SOLR_GROUP="infra-solr"
@@ -35,9 +35,17 @@ RUN cp /infra-solr/conf/infra-solr.conf /etc/security/limits.d/
 
 RUN groupadd -r --gid $SOLR_GID $SOLR_GROUP && useradd -r --uid $SOLR_UID --gid $SOLR_GID $SOLR_USER
 RUN chown -R $SOLR_USER:$SOLR_GROUP /usr/lib/ambari-infra-solr
+RUN chown -R $SOLR_USER:$SOLR_GROUP /etc/ambari-infra-solr/conf
 RUN chown -R $SOLR_USER:$SOLR_GROUP /var/lib/ambari-infra-solr/data
 RUN chown -R $SOLR_USER:$SOLR_GROUP /usr/lib/ambari-infra-solr-client
 RUN chown -R $SOLR_USER:$SOLR_GROUP /infra-solr && chmod +x /infra-solr/bin/entrypoint.sh
+RUN find /usr/lib/ambari-infra-solr -type d -exec chmod 755 {} +
+RUN find /usr/lib/ambari-infra-solr -type f -exec chmod 644 {} +
+RUN find /usr/lib/ambari-infra-solr-client -type d -exec chmod 755 {} +
+RUN find /usr/lib/ambari-infra-solr-client -type f -exec chmod 644 {} +
+
+RUN ls -la /usr/lib/ambari-infra-solr
+
 USER $SOLR_USER
 
 WORKDIR /infra-solr/bin/
