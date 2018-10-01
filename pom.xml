@@ -285,6 +285,7 @@
             <exclude>**/docker/Profile</exclude>
             <exclude>**/docker/.env</exclude>
             <exclude>**/*.story</exclude>
+            <exclude>.repository/**</exclude>
           </excludes>
         </configuration>
         <executions>
