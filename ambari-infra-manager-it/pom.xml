@@ -34,7 +34,7 @@
   <properties>
     <jbehave.version>4.0.5</jbehave.version>
     <failsafe-plugin.version>2.20</failsafe-plugin.version>
-    <docker.host>localhost</docker.host>
+    <infra-manager.docker.host>localhost</infra-manager.docker.host>
     <stories.location>NONE</stories.location>
   </properties>
 
@@ -202,7 +202,7 @@
                   </includes>
                   <systemPropertyVariables>
                     <log4j.configuration>file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
-                    <docker.host>${docker.host}</docker.host>
+                    <docker.host>${infra-manager.docker.host}</docker.host>
                     <backend.stories.location>${stories.location}</backend.stories.location>
                   </systemPropertyVariables>
                 </configuration>
