@@ -16,35 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.job.deleting;
+package org.apache.ambari.infra.job.cleanup;
 
-import static org.apache.ambari.infra.job.archive.SolrQueryBuilder.computeEnd;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 
-import org.apache.ambari.infra.job.SolrDAOBase;
-import org.apache.solr.client.solrj.util.ClientUtils;
+import org.apache.ambari.infra.job.InfraJobExecutionDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 
-public class DocumentWiperTasklet extends SolrDAOBase implements Tasklet {
-  private final DeletingParameters parameters;
+public class TaskHistoryWiper implements Tasklet {
 
-  public DocumentWiperTasklet(DeletingParameters deletingParameters) {
-    super(deletingParameters.getZooKeeperConnectionString(), deletingParameters.getCollection());
-    parameters = deletingParameters;
+  private static final Logger logger = LoggerFactory.getLogger(TaskHistoryWiper.class);
+  public static final Duration DEFAULT_TTL = Duration.ofHours(1);
+
+  private final InfraJobExecutionDao infraJobExecutionDao;
+  private final Duration ttl;
+
+  public TaskHistoryWiper(InfraJobExecutionDao infraJobExecutionDao, Duration ttl) {
+    this.infraJobExecutionDao = infraJobExecutionDao;
+    if (ttl == null || ttl.compareTo(DEFAULT_TTL) < 0) {
+      logger.info("The ttl value ({}) less than the minimum required. Using the default ({}) instead", ttl, DEFAULT_TTL);
+      this.ttl = DEFAULT_TTL;
+    }
+    else {
+      this.ttl = ttl;
+    }
   }
 
   @Override
   public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-    delete(String.format("%s:[%s TO %s]",
-            parameters.getFilterField(),
-            getValue(parameters.getStart()),
-            getValue(computeEnd(parameters.getEnd(), parameters.getTtl()))));
+    infraJobExecutionDao.deleteJobExecutions(OffsetDateTime.now().minus(ttl));
     return RepeatStatus.FINISHED;
-  }
-
-  private String getValue(String value) {
-    return "*".equals(value) ? value : ClientUtils.escapeQueryChars(value);
   }
 }

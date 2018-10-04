@@ -18,6 +18,9 @@
  */
 package org.apache.ambari.infra.job.archive;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+
 import org.apache.ambari.infra.job.SolrDAOBase;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -26,15 +29,12 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-
 public class SolrDAO extends SolrDAOBase implements DocumentWiper {
   private static final Logger LOG = LoggerFactory.getLogger(SolrDAO.class);
 
-  private final SolrProperties queryProperties;
+  private final SolrParameters queryProperties;
 
-  public SolrDAO(SolrProperties queryProperties) {
+  public SolrDAO(SolrParameters queryProperties) {
     super(queryProperties.getZooKeeperConnectionString(), queryProperties.getCollection());
     this.queryProperties = queryProperties;
   }

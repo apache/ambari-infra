@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.ambari.infra.InfraClient;
+import org.apache.ambari.infra.S3Client;
 import org.apache.ambari.infra.Solr;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -44,11 +46,6 @@ import org.jbehave.core.annotations.BeforeStories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-
 public abstract class AbstractInfraSteps {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractInfraSteps.class);
 
@@ -59,7 +56,7 @@ public abstract class AbstractInfraSteps {
   private String ambariFolder;
   private String shellScriptLocation;
   private String dockerHost;
-  private AmazonS3Client s3client;
+  private S3Client s3client;
   private int documentId = 0;
   private Solr solr;
 
@@ -71,7 +68,7 @@ public abstract class AbstractInfraSteps {
     return solr;
   }
 
-  public AmazonS3Client getS3client() {
+  public S3Client getS3client() {
     return s3client;
   }
 
@@ -86,8 +83,11 @@ public abstract class AbstractInfraSteps {
     URL location = AbstractInfraSteps.class.getProtectionDomain().getCodeSource().getLocation();
     ambariFolder = new File(location.toURI()).getParentFile().getParentFile().getParentFile().getParent();
 
-    LOG.info("Clean local data folder {}", getLocalDataFolder());
-    FileUtils.cleanDirectory(new File(getLocalDataFolder()));
+    String localDataFolder = getLocalDataFolder();
+    if (new File(localDataFolder).exists()) {
+      LOG.info("Clean local data folder {}", localDataFolder);
+      FileUtils.cleanDirectory(new File(localDataFolder));
+    }
 
     shellScriptLocation = ambariFolder + "/ambari-infra/ambari-infra-manager/docker/infra-manager-docker-compose.sh";
     LOG.info("Create new docker container for testing Ambari Infra Manager ...");
@@ -102,9 +102,7 @@ public abstract class AbstractInfraSteps {
     solr.createSolrCollection(HADOOP_LOGS_COLLECTION);
 
     LOG.info("Initializing s3 client");
-    s3client = new AmazonS3Client(new BasicAWSCredentials("remote-identity", "remote-credential"));
-    s3client.setEndpoint(String.format("http://%s:%d", dockerHost, FAKE_S3_PORT));
-    s3client.createBucket(S3_BUCKET_NAME);
+    s3client = new S3Client(dockerHost, FAKE_S3_PORT, S3_BUCKET_NAME);
 
     checkInfraManagerReachable();
   }
@@ -155,10 +153,9 @@ public abstract class AbstractInfraSteps {
   @AfterStories
   public void shutdownContainers() throws Exception {
     Thread.sleep(2000); // sync with s3 server
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(S3_BUCKET_NAME);
-    ObjectListing objectListing = getS3client().listObjects(listObjectsRequest);
-    LOG.info("Found {} files on s3.", objectListing.getObjectSummaries().size());
-    objectListing.getObjectSummaries().forEach(s3ObjectSummary ->  LOG.info("Found file on s3 with key {}", s3ObjectSummary.getKey()));
+    List<String> objectKeys = getS3client().listObjectKeys();
+    LOG.info("Found {} files on s3.", objectKeys.size());
+    objectKeys.forEach(objectKey ->  LOG.info("Found file on s3 with key {}", objectKey));
 
     LOG.info("Listing files on hdfs.");
     try (FileSystem fileSystem = getHdfs()) {

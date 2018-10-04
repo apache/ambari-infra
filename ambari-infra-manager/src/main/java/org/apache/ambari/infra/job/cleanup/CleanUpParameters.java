@@ -16,25 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.job;
+package org.apache.ambari.infra.job.cleanup;
 
-public class SchedulingProperties {
-  private boolean enabled = false;
-  private String cron;
+import java.time.Duration;
 
-  public boolean isEnabled() {
-    return enabled;
+import org.apache.ambari.infra.job.Validatable;
+import org.apache.ambari.infra.json.DurationToStringConverter;
+import org.apache.ambari.infra.json.StringToDurationConverter;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+public class CleanUpParameters implements Validatable {
+
+  @JsonSerialize(converter = DurationToStringConverter.class)
+  @JsonDeserialize(converter = StringToDurationConverter.class)
+  private Duration ttl;
+
+  public Duration getTtl() {
+    return ttl;
   }
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+  public void setTtl(Duration ttl) {
+    this.ttl = ttl;
   }
 
-  public String getCron() {
-    return cron;
-  }
+  @Override
+  public void validate() {
 
-  public void setCron(String cron) {
-    this.cron = cron;
   }
 }

@@ -16,25 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.job;
+package org.apache.ambari.infra.conf;
 
-public class SchedulingProperties {
-  private boolean enabled = false;
-  private String cron;
+import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
 
-  public boolean isEnabled() {
-    return enabled;
-  }
+import java.time.Duration;
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
-  }
+import javax.inject.Named;
 
-  public String getCron() {
-    return cron;
-  }
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
+import org.springframework.core.convert.converter.Converter;
 
-  public void setCron(String cron) {
-    this.cron = cron;
+@Named
+@ConfigurationPropertiesBinding
+public class DurationConverter implements Converter<String, Duration> {
+  @Override
+  public Duration convert(String s) {
+    return toDuration(s);
   }
 }

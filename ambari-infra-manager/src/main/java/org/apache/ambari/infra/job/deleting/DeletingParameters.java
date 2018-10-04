@@ -18,18 +18,25 @@
  */
 package org.apache.ambari.infra.job.deleting;
 
-import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.time.Duration;
 
-import org.apache.ambari.infra.job.JobProperties;
+import org.apache.ambari.infra.job.Validatable;
 import org.apache.ambari.infra.json.DurationToStringConverter;
-import org.springframework.batch.core.JobParameters;
+import org.apache.ambari.infra.json.StringToDurationConverter;
 
-public class DocumentDeletingProperties extends JobProperties<DeletingParameters> {
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+public class DeletingParameters implements Validatable {
   private String zooKeeperConnectionString;
   private String collection;
   private String filterField;
+  private String start;
+  private String end;
+  @JsonSerialize(converter = DurationToStringConverter.class)
+  @JsonDeserialize(converter = StringToDurationConverter.class)
   private Duration ttl;
 
   public String getZooKeeperConnectionString() {
@@ -56,6 +63,22 @@ public class DocumentDeletingProperties extends JobProperties<DeletingParameters
     this.filterField = filterField;
   }
 
+  public String getStart() {
+    return start;
+  }
+
+  public void setStart(String start) {
+    this.start = start;
+  }
+
+  public String getEnd() {
+    return end;
+  }
+
+  public void setEnd(String end) {
+    this.end = end;
+  }
+
   public Duration getTtl() {
     return ttl;
   }
@@ -65,14 +88,14 @@ public class DocumentDeletingProperties extends JobProperties<DeletingParameters
   }
 
   @Override
-  public DeletingParameters merge(JobParameters jobParameters) {
-    DeletingParameters deletingParameters = new DeletingParameters();
-    deletingParameters.setZooKeeperConnectionString(jobParameters.getString("zooKeeperConnectionString", zooKeeperConnectionString));
-    deletingParameters.setCollection(jobParameters.getString("collection", collection));
-    deletingParameters.setFilterField(jobParameters.getString("filterField", filterField));
-    deletingParameters.setStart(jobParameters.getString("start", "*"));
-    deletingParameters.setEnd(jobParameters.getString("end", "*"));
-    deletingParameters.setTtl(toDuration(jobParameters.getString("ttl", DurationToStringConverter.toString(ttl))));
-    return deletingParameters;
+  public void validate() {
+    if (isBlank(zooKeeperConnectionString))
+      throw new IllegalArgumentException("The property zooKeeperConnectionString can not be null or empty string!");
+
+    if (isBlank(collection))
+      throw new IllegalArgumentException("The property collection can not be null or empty string!");
+
+    if (isBlank(filterField))
+      throw new IllegalArgumentException("The property filterField can not be null or empty string!");
   }
 }

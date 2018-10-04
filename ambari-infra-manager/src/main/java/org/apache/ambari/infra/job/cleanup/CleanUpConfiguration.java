@@ -16,63 +16,64 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.job.deleting;
+package org.apache.ambari.infra.job.cleanup;
 
 import static org.apache.ambari.infra.job.JobsPropertyMap.PARAMETERS_CONTEXT_KEY;
 
 import javax.inject.Inject;
 
-import org.apache.ambari.infra.job.AbstractJobsConfiguration;
+import org.apache.ambari.infra.job.InfraJobExecutionDao;
+import org.apache.ambari.infra.job.JobPropertiesHolder;
 import org.apache.ambari.infra.job.JobScheduler;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor;
-import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 
 @Configuration
-public class DocumentDeletingConfiguration extends AbstractJobsConfiguration<DocumentDeletingProperties, DeletingParameters> {
+public class CleanUpConfiguration {
 
+  public static final String JOB_NAME = "clean_up";
   private final StepBuilderFactory steps;
-  private final Step deleteStep;
+  private final JobBuilderFactory jobs;
+  private final JobScheduler scheduler;
+  private final CleanUpProperties cleanUpProperties;
 
   @Inject
-  public DocumentDeletingConfiguration(
-          DocumentDeletingPropertyMap documentDeletingPropertyMap,
-          JobScheduler scheduler,
-          StepBuilderFactory steps,
-          JobBuilderFactory jobs,
-          JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor,
-          @Qualifier("deleteStep") Step deleteStep) {
-    super(documentDeletingPropertyMap.getSolrDataDeleting(), scheduler, jobs, jobRegistryBeanPostProcessor);
+  public CleanUpConfiguration(StepBuilderFactory steps, JobBuilderFactory jobs, CleanUpProperties cleanUpProperties, JobScheduler scheduler) {
     this.steps = steps;
-    this.deleteStep = deleteStep;
+    this.jobs = jobs;
+    this.scheduler = scheduler;
+    this.cleanUpProperties = cleanUpProperties;
   }
 
-  @Override
-  protected Job buildJob(JobBuilder jobBuilder) {
-    return jobBuilder.start(deleteStep).build();
+  @EventListener(ApplicationReadyEvent.class)
+  public void scheduleJob() {
+    cleanUpProperties.scheduling().ifPresent(schedulingProperties -> scheduler.schedule(JOB_NAME, schedulingProperties));
   }
 
-  @Bean
-  @JobScope
-  public Step deleteStep(DocumentWiperTasklet tasklet) {
-    return steps.get("delete")
-            .tasklet(tasklet)
-            .build();
+  @Bean(name = "cleanUpJob")
+  public Job job(@Qualifier("cleanUpStep") Step cleanUpStep) {
+    return jobs.get(JOB_NAME).listener(new JobPropertiesHolder<>(cleanUpProperties)).start(cleanUpStep).build();
+  }
+
+  @Bean(name = "cleanUpStep")
+  protected Step cleanUpStep(TaskHistoryWiper taskHistoryWiper) {
+    return steps.get("cleanUpStep").tasklet(taskHistoryWiper).build();
   }
 
   @Bean
   @StepScope
-  public DocumentWiperTasklet documentWiperTasklet(
-          @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") DeletingParameters parameters) {
-    return new DocumentWiperTasklet(parameters);
+  protected TaskHistoryWiper taskHistoryWiper(
+          InfraJobExecutionDao infraJobExecutionDao,
+          @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") CleanUpParameters cleanUpParameters) {
+    return new TaskHistoryWiper(infraJobExecutionDao, cleanUpParameters.getTtl());
   }
 }

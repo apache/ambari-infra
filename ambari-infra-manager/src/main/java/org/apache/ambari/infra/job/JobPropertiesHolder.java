@@ -18,29 +18,33 @@
  */
 package org.apache.ambari.infra.job;
 
-import java.util.Map;
+import static org.apache.ambari.infra.job.JobsPropertyMap.PARAMETERS_CONTEXT_KEY;
 
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 
-public class JobsPropertyMap<TProperties extends JobProperties<TParameters>, TParameters extends Validatable>
+public class JobPropertiesHolder<T extends Validatable>
         implements JobExecutionListener {
 
-  public static final String PARAMETERS_CONTEXT_KEY = "jobParameters";
-  private final Map<String, TProperties> propertyMap;
+  private final JobProperties<T> defaultProperties;
 
-  public JobsPropertyMap(Map<String, TProperties> propertyMap) {
-    this.propertyMap = propertyMap;
+  public JobPropertiesHolder(JobProperties<T> defaultProperties) {
+    this.defaultProperties = defaultProperties;
   }
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
-    String jobName = jobExecution.getJobInstance().getJobName();
-    TProperties defaultProperties = propertyMap.get(jobName);
-    if (defaultProperties == null)
-      throw new UnsupportedOperationException("Properties not found for job " + jobName);
-
-    new JobPropertiesHolder<>(defaultProperties).beforeJob(jobExecution);
+    try {
+      T parameters = defaultProperties.merge(jobExecution.getJobParameters());
+      parameters.validate();
+      jobExecution.getExecutionContext().put(PARAMETERS_CONTEXT_KEY, parameters);
+    }
+    catch (UnsupportedOperationException | IllegalArgumentException ex) {
+      jobExecution.stop();
+      jobExecution.setExitStatus(new ExitStatus(ExitStatus.FAILED.getExitCode(), ex.getMessage()));
+      throw ex;
+    }
   }
 
   @Override

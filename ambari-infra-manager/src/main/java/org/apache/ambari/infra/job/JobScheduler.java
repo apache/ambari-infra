@@ -18,6 +18,11 @@
  */
 package org.apache.ambari.infra.job;
 
+import java.util.Date;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.ambari.infra.manager.Jobs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +37,6 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-
-import static org.apache.ambari.infra.job.archive.FileNameSuffixFormatter.SOLR_DATETIME_FORMATTER;
-import static org.apache.commons.lang.StringUtils.isBlank;
 
 @Named
 public class JobScheduler {
@@ -61,7 +58,7 @@ public class JobScheduler {
       throw new RuntimeException(e);
     }
 
-    scheduler.schedule(() -> launchJob(jobName, schedulingProperties.getIntervalEndDelta()), new CronTrigger(schedulingProperties.getCron()));
+    scheduler.schedule(() -> launchJob(jobName), new CronTrigger(schedulingProperties.getCron()));
     LOG.info("Job {} scheduled for running. Cron: {}", jobName, schedulingProperties.getCron());
   }
 
@@ -75,12 +72,10 @@ public class JobScheduler {
     }
   }
 
-  private void launchJob(String jobName, String endDelta) {
+  private void launchJob(String jobName) {
     try {
       JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
-      if (!isBlank(endDelta))
-        jobParametersBuilder.addString("end", SOLR_DATETIME_FORMATTER.format(OffsetDateTime.now().minus(Duration.parse(endDelta))));
-
+      jobParametersBuilder.addDate("scheduledLaunchAt", new Date());
       jobs.launchJob(jobName, jobParametersBuilder.toJobParameters());
     } catch (JobParametersInvalidException | NoSuchJobException | JobExecutionAlreadyRunningException | JobRestartException | JobInstanceAlreadyCompleteException e) {
       throw new RuntimeException(e);

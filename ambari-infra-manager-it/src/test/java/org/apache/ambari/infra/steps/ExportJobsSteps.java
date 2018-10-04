@@ -23,11 +23,9 @@ import static org.apache.ambari.infra.OffsetDateTimeConverter.SOLR_DATETIME_FORM
 import static org.apache.ambari.infra.TestUtil.doWithin;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,10 +33,12 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.ambari.infra.InfraClient;
 import org.apache.ambari.infra.JobExecutionInfo;
+import org.apache.ambari.infra.S3Client;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -49,11 +49,6 @@ import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 
 public class ExportJobsSteps extends AbstractInfraSteps {
   private static final Logger LOG = LoggerFactory.getLogger(ExportJobsSteps.class);
@@ -80,9 +75,7 @@ public class ExportJobsSteps extends AbstractInfraSteps {
 
   @Given("a file on s3 with key $key")
   public void addFileToS3(String key) throws Exception {
-    try (ByteArrayInputStream inputStream = new ByteArrayInputStream("anything".getBytes())) {
-      getS3client().putObject(S3_BUCKET_NAME, key, inputStream, new ObjectMetadata());
-    }
+    getS3client().putObject(key, "anything".getBytes());
   }
 
   @When("start $jobName job")
@@ -113,10 +106,8 @@ public class ExportJobsSteps extends AbstractInfraSteps {
 
   @When("stop job $jobName after at least $count file exists in s3 with filename containing text $text within $waitSec seconds")
   public void stopJob(String jobName, int count, String text, int waitSec) throws Exception {
-    AmazonS3Client s3Client = getS3client();
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(S3_BUCKET_NAME);
-    doWithin(waitSec, "check uploaded files to s3", () -> s3Client.doesBucketExist(S3_BUCKET_NAME)
-            && fileCountOnS3(text, s3Client, listObjectsRequest) > count);
+    S3Client s3Client = getS3client();
+    doWithin(waitSec, "check uploaded files to s3", () -> s3Client.listObjectKeys(text).size() > count);
 
     try (InfraClient httpClient = getInfraClient()) {
       httpClient.stopJob(launchedJobs.get(jobName).getExecutionId());
@@ -125,40 +116,29 @@ public class ExportJobsSteps extends AbstractInfraSteps {
 
   @When("delete file with key $key from s3")
   public void deleteFileFromS3(String key) {
-    getS3client().deleteObject(S3_BUCKET_NAME, key);
+    getS3client().deleteObject(key);
   }
 
   @Then("Check filenames contains the text $text on s3 server after $waitSec seconds")
   public void checkS3After(String text, int waitSec) {
-    AmazonS3Client s3Client = getS3client();
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(S3_BUCKET_NAME);
-    doWithin(waitSec, "check uploaded files to s3", () -> s3Client.doesBucketExist(S3_BUCKET_NAME)
-            && !s3Client.listObjects(listObjectsRequest).getObjectSummaries().isEmpty());
+    S3Client s3Client = getS3client();
+    doWithin(waitSec, "check uploaded files to s3", () -> !s3Client.listObjectKeys().isEmpty());
 
-    ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
-    assertThat(objectListing.getObjectSummaries(), hasItem(hasProperty("key", containsString(text))));
+    List<String> objectKeys = s3Client.listObjectKeys(text);
+    assertThat(objectKeys, hasItem(containsString(text)));
   }
 
   @Then("Check $count files exists on s3 server with filenames containing the text $text after $waitSec seconds")
   public void checkNumberOfFilesOnS3(long count, String text, int waitSec) {
-    AmazonS3Client s3Client = getS3client();
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(S3_BUCKET_NAME);
-    doWithin(waitSec, "check uploaded files to s3", () -> s3Client.doesBucketExist(S3_BUCKET_NAME)
-            && fileCountOnS3(text, s3Client, listObjectsRequest) == count);
-  }
-
-  private long fileCountOnS3(String text, AmazonS3Client s3Client, ListObjectsRequest listObjectsRequest) {
-    return s3Client.listObjects(listObjectsRequest).getObjectSummaries().stream()
-    .filter(s3ObjectSummary -> s3ObjectSummary.getKey().contains(text))
-    .count();
+    S3Client s3Client = getS3client();
+    doWithin(waitSec, "check uploaded files to s3", () -> s3Client.listObjectKeys(text).size() == count);
   }
 
   @Then("Less than $count files exists on s3 server with filenames containing the text $text after $waitSec seconds")
   public void checkLessThanFileExistsOnS3(long count, String text, int waitSec) {
-    AmazonS3Client s3Client = getS3client();
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(S3_BUCKET_NAME);
-    doWithin(waitSec, "check uploaded files to s3", () -> s3Client.doesBucketExist(S3_BUCKET_NAME) && between(
-            fileCountOnS3(text, s3Client, listObjectsRequest), 1L, count - 1L));
+    S3Client s3Client = getS3client();
+    doWithin(waitSec, "check uploaded files to s3", () -> between(
+            s3Client.listObjectKeys(text).size(), 1L, count - 1L));
   }
 
   private boolean between(long count, long from, long to) {
@@ -167,10 +147,9 @@ public class ExportJobsSteps extends AbstractInfraSteps {
 
   @Then("No file exists on s3 server with filenames containing the text $text")
   public void fileNotExistOnS3(String text) {
-    AmazonS3Client s3Client = getS3client();
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(S3_BUCKET_NAME);
-    assertThat(s3Client.listObjects(listObjectsRequest).getObjectSummaries().stream()
-            .anyMatch(s3ObjectSummary -> s3ObjectSummary.getKey().contains(text)), is(false));
+    S3Client s3Client = getS3client();
+    assertThat(s3Client.listObjectKeys().stream()
+            .anyMatch(objectKey -> objectKey.contains(text)), is(false));
   }
 
   @Then("solr contains $count documents between $startLogtime and $endLogtime")

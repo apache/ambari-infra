@@ -18,6 +18,14 @@
  */
 package org.apache.ambari.infra.job.archive;
 
+import static org.apache.ambari.infra.job.JobsPropertyMap.PARAMETERS_CONTEXT_KEY;
+import static org.apache.ambari.infra.job.archive.SolrQueryBuilder.computeEnd;
+import static org.apache.commons.lang.StringUtils.isBlank;
+
+import java.io.File;
+
+import javax.inject.Inject;
+
 import org.apache.ambari.infra.conf.InfraManagerDataConfig;
 import org.apache.ambari.infra.conf.security.PasswordStore;
 import org.apache.ambari.infra.job.AbstractJobsConfiguration;
@@ -40,13 +48,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.inject.Inject;
-import java.io.File;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
-
 @Configuration
-public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<DocumentArchivingProperties> {
+public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<DocumentArchivingProperties, ArchivingParameters> {
   private static final Logger LOG = LoggerFactory.getLogger(DocumentArchivingConfiguration.class);
   private static final DocumentWiper NOT_DELETE = (firstDocument, lastDocument) -> { };
 
@@ -83,7 +86,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
   @StepScope
   public DocumentExporter documentExporter(DocumentItemReader documentItemReader,
                                            @Value("#{stepExecution.jobExecution.jobId}") String jobId,
-                                           @Value("#{stepExecution.jobExecution.executionContext.get('jobProperties')}") DocumentArchivingProperties properties,
+                                           @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
                                            InfraManagerDataConfig infraManagerDataConfig,
                                            @Value("#{jobParameters[end]}") String intervalEnd,
                                            DocumentWiper documentWiper,
@@ -92,28 +95,28 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
 
     File baseDir = new File(infraManagerDataConfig.getDataFolder(), "exporting");
     CompositeFileAction fileAction = new CompositeFileAction(new TarGzCompressor());
-    switch (properties.getDestination()) {
+    switch (parameters.getDestination()) {
       case S3:
         fileAction.add(new S3Uploader(
-                properties.s3Properties().orElseThrow(() -> new IllegalStateException("S3 properties are not provided!")),
+                parameters.s3Properties().orElseThrow(() -> new IllegalStateException("S3 properties are not provided!")),
                 passwordStore));
         break;
       case HDFS:
         org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
-        conf.set("fs.defaultFS", properties.getHdfsEndpoint());
-        fileAction.add(new HdfsUploader(conf, new Path(properties.getHdfsDestinationDirectory())));
+        conf.set("fs.defaultFS", parameters.getHdfsEndpoint());
+        fileAction.add(new HdfsUploader(conf, new Path(parameters.getHdfsDestinationDirectory())));
         break;
       case LOCAL:
-        baseDir = new File(properties.getLocalDestinationDirectory());
+        baseDir = new File(parameters.getLocalDestinationDirectory());
         break;
     }
 
-    FileNameSuffixFormatter fileNameSuffixFormatter = FileNameSuffixFormatter.from(properties);
+    FileNameSuffixFormatter fileNameSuffixFormatter = FileNameSuffixFormatter.from(parameters);
     LocalItemWriterListener itemWriterListener = new LocalItemWriterListener(fileAction, documentWiper);
     File destinationDirectory = new File(
             baseDir,
             String.format("%s_%s_%s",
-                    properties.getSolr().getCollection(),
+                    parameters.getSolr().getCollection(),
                     jobId,
                     isBlank(intervalEnd) ? "" : fileNameSuffixFormatter.format(intervalEnd)));
     LOG.info("Destination directory path={}", destinationDirectory);
@@ -126,23 +129,23 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
     return new DocumentExporter(
             documentItemReader,
             firstDocument -> new LocalDocumentItemWriter(
-                    outFile(properties.getSolr().getCollection(), destinationDirectory, fileNameSuffixFormatter.format(firstDocument)), itemWriterListener),
-            properties.getWriteBlockSize(), jobContextRepository);
+                    outFile(parameters.getSolr().getCollection(), destinationDirectory, fileNameSuffixFormatter.format(firstDocument)), itemWriterListener),
+            parameters.getWriteBlockSize(), jobContextRepository);
   }
 
   @Bean
   @StepScope
-  public DocumentWiper documentWiper(@Value("#{stepExecution.jobExecution.executionContext.get('jobProperties')}") DocumentArchivingProperties properties,
+  public DocumentWiper documentWiper(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
                                      SolrDAO solrDAO) {
-    if (isBlank(properties.getSolr().getDeleteQueryText()))
+    if (isBlank(parameters.getSolr().getDeleteQueryText()))
       return NOT_DELETE;
     return solrDAO;
   }
 
   @Bean
   @StepScope
-  public SolrDAO solrDAO(@Value("#{stepExecution.jobExecution.executionContext.get('jobProperties')}") DocumentArchivingProperties properties) {
-    return new SolrDAO(properties.getSolr());
+  public SolrDAO solrDAO(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters) {
+    return new SolrDAO(parameters.getSolr());
   }
 
   private File outFile(String collection, File directoryPath, String suffix) {
@@ -154,16 +157,15 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
   @Bean
   @StepScope
   public DocumentItemReader reader(ObjectSource<Document> documentSource,
-                                   @Value("#{stepExecution.jobExecution.executionContext.get('jobProperties')}") DocumentArchivingProperties properties) {
+                                   @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters properties) {
     return new DocumentItemReader(documentSource, properties.getReadBlockSize());
   }
 
   @Bean
   @StepScope
-  public ObjectSource<Document> logSource(@Value("#{jobParameters[start]}") String start,
-                                          @Value("#{jobParameters[end]}") String end,
+  public ObjectSource<Document> logSource(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
                                           SolrDAO solrDAO) {
 
-    return new SolrDocumentSource(solrDAO, start, end);
+    return new SolrDocumentSource(solrDAO, parameters.getStart(), computeEnd(parameters.getEnd(), parameters.getTtl()));
   }
 }
