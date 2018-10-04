@@ -18,7 +18,11 @@
  */
 package org.apache.ambari.infra.solr;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.ambari.infra.solr.commands.CheckConfigZkCommand;
+import org.apache.ambari.infra.solr.commands.CheckZnodeZkCommand;
 import org.apache.ambari.infra.solr.commands.CreateCollectionCommand;
 import org.apache.ambari.infra.solr.commands.CreateShardCommand;
 import org.apache.ambari.infra.solr.commands.CreateSolrZnodeZkCommand;
@@ -32,20 +36,17 @@ import org.apache.ambari.infra.solr.commands.ListCollectionCommand;
 import org.apache.ambari.infra.solr.commands.RemoveAdminHandlersCommand;
 import org.apache.ambari.infra.solr.commands.SecureSolrZNodeZkCommand;
 import org.apache.ambari.infra.solr.commands.SecureZNodeZkCommand;
+import org.apache.ambari.infra.solr.commands.SetAutoScalingZkCommand;
 import org.apache.ambari.infra.solr.commands.SetClusterPropertyZkCommand;
 import org.apache.ambari.infra.solr.commands.TransferZnodeZkCommand;
 import org.apache.ambari.infra.solr.commands.UnsecureZNodeZkCommand;
 import org.apache.ambari.infra.solr.commands.UploadConfigZkCommand;
-import org.apache.ambari.infra.solr.commands.CheckZnodeZkCommand;
 import org.apache.ambari.infra.solr.util.ShardUtils;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.common.cloud.Slice;
 import org.apache.solr.common.cloud.SolrZkClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Client for communicate with Solr (and Zookeeper)
@@ -80,6 +81,7 @@ public class AmbariSolrCloudClient {
   private final String copyDest;
   private final String output;
   private final boolean includeDocNumber;
+  private final String autoScalingJsonLocation;
 
   public AmbariSolrCloudClient(AmbariSolrCloudClientBuilder builder) {
     this.zkConnectString = builder.zkConnectString;
@@ -108,6 +110,7 @@ public class AmbariSolrCloudClient {
     this.copyDest = builder.copyDest;
     this.output = builder.output;
     this.includeDocNumber = builder.includeDocNumber;
+    this.autoScalingJsonLocation = builder.autoScalingJsonLocation;
   }
 
   /**
@@ -297,6 +300,10 @@ public class AmbariSolrCloudClient {
    */
   public boolean deleteZnode() throws Exception {
     return new DeleteZnodeZkCommand(getRetryTimes(), getInterval()).run(this);
+  }
+
+  public void setAutoScaling() throws Exception {
+    new SetAutoScalingZkCommand(getRetryTimes(), getInterval(), autoScalingJsonLocation).run(this);
   }
 
   public String getZkConnectString() {
