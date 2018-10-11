@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Optional;
 
 import org.apache.ambari.infra.conf.security.CompositePasswordStore;
 import org.apache.ambari.infra.conf.security.PasswordStore;
@@ -49,7 +48,6 @@ public class S3Uploader extends AbstractFileAction {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3Uploader.class);
 
-//  private final AmazonS3Client client;
   private final MinioClient client;
   private final String keyPrefix;
   private final String bucketName;
@@ -78,17 +76,6 @@ public class S3Uploader extends AbstractFileAction {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-
-//    BasicAWSCredentials credentials = new BasicAWSCredentials(
-//            compositePasswordStore.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName())
-//                    .orElseThrow(() -> new IllegalArgumentException("Access key Id is not present!")),
-//            compositePasswordStore.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName())
-//                    .orElseThrow(() -> new IllegalArgumentException("Secret Access Key is not present!")));
-//    client = new AmazonS3Client(credentials);
-//    if (!isBlank(s3Properties.getS3EndPoint()))
-//      client.setEndpoint(s3Properties.getS3EndPoint());
-//     Note: without pathStyleAccess=true endpoint going to be <bucketName>.<host>:<port>
-//    client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build());
   }
 
   @Override
@@ -109,11 +96,5 @@ public class S3Uploader extends AbstractFileAction {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  public static void main(String[] args) {
-    S3Properties s3Properties = new S3Properties(null, "my_", "testbucket", "http://localhost:4569");
-    S3Uploader uploader = new S3Uploader(s3Properties, propertyName -> Optional.of("test"));
-    uploader.onPerform(new File("/Users/kkasa/project/ambari-infra/ambari-infra-manager/docker/test.txt"));
   }
 }
