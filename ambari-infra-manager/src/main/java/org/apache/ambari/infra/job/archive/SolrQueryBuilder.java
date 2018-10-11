@@ -47,7 +47,7 @@ public class SolrQueryBuilder {
   private static final String INTERVAL_START = "start";
   private static final String INTERVAL_END = "end";
   private String queryText;
-  private final Map<String, String> interval;
+  private final Map<String, Object> interval;
   private String filterQueryText;
   private Document document;
   private String[] sortFields;

@@ -24,11 +24,11 @@ And solr contains 10 documents between 2010-01-01T05:00:00.000Z and 2010-01-04T0
 Scenario: Archiving job fails when part of the data is exported. After resolving the issue and restarting the job exports the rest of the data.
 
 Given 200 documents in solr with logtime from 2011-10-09T05:00:00.000Z to 2011-10-09T20:00:00.000Z
-And a file on s3 with key solr_archive_audit_logs_-_2011-10-09T08-00-00.000Z.json.tar.gz
+And a file on s3 with key solr_archive_audit_logs_-_2011-10-09T08-00-00.000Z.json.bz2
 When start archive_audit_logs job with parameters writeBlockSize=20,start=2010-11-09T00:00:00.000Z,end=2011-10-11T00:00:00.000Z after 2 seconds
 Then Check 3 files exists on s3 server with filenames containing the text solr_archive_audit_logs_-_2011-10-09 after 20 seconds
 And solr does not contain documents between 2011-10-09T05:00:00.000Z and 2011-10-09T07:59:59.999Z after 5 seconds
-When delete file with key solr_archive_audit_logs_-_2011-10-09T08-00-00.000Z.json.tar.gz from s3
+When delete file with key solr_archive_audit_logs_-_2011-10-09T08-00-00.000Z.json.bz2 from s3
 And restart archive_audit_logs job within 2 seconds
 Then Check 10 files exists on s3 server with filenames containing the text solr_archive_audit_logs_-_2011-10-09 after 20 seconds
 And solr does not contain documents between 2011-10-09T05:00:00.000Z and 2011-10-09T20:00:00.000Z after 5 seconds

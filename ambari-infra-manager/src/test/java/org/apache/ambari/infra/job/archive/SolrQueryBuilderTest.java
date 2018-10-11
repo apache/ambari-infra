@@ -33,7 +33,7 @@ import org.hamcrest.core.Is;
 import org.junit.Test;
 
 public class SolrQueryBuilderTest {
-  private static final Document DOCUMENT = new Document(new HashMap<String, String>() {{
+  private static final Document DOCUMENT = new Document(new HashMap<String, Object>() {{
     put("logtime", "2017-10-02'T'10:00:11.634Z");
     put("id", "1");
   }});

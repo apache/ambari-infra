@@ -19,6 +19,15 @@
 
 package org.apache.ambari.infra.job.archive;
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
+
 import org.apache.ambari.infra.job.JobContextRepository;
 import org.easymock.EasyMockRunner;
 import org.easymock.EasyMockSupport;
@@ -36,24 +45,15 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-
 @RunWith(EasyMockRunner.class)
 public class DocumentExporterTest extends EasyMockSupport {
 
   private static final long JOB_EXECUTION_ID = 1L;
   private static final long STEP_EXECUTION_ID = 1L;
-  private static final Document DOCUMENT_2 = new Document(new HashMap<String, String>() {{
+  private static final Document DOCUMENT_2 = new Document(new HashMap<String, Object>() {{
     put("id", "2");
   }});
-  private static final Document DOCUMENT_3 = new Document(new HashMap<String, String>() {{
+  private static final Document DOCUMENT_3 = new Document(new HashMap<String, Object>() {{
     put("id", "3");
   }});
   private DocumentExporter documentExporter;
@@ -70,9 +70,8 @@ public class DocumentExporterTest extends EasyMockSupport {
   @Mock
   private JobContextRepository jobContextRepository;
 
-//  private ExecutionContext executionContext;
   private ChunkContext chunkContext;
-  private static final Document DOCUMENT = new Document(new HashMap<String, String>() {{ put("id", "1"); }});
+  private static final Document DOCUMENT = new Document(new HashMap<String, Object>() {{ put("id", "1"); }});
 
   @Before
   public void setUp() throws Exception {

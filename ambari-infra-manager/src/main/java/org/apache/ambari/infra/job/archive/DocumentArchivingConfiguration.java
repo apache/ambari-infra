@@ -94,7 +94,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
                                            PasswordStore passwordStore) {
 
     File baseDir = new File(infraManagerDataConfig.getDataFolder(), "exporting");
-    CompositeFileAction fileAction = new CompositeFileAction(new TarGzCompressor());
+    CompositeFileAction fileAction = new CompositeFileAction(new BZip2Compressor());
     switch (parameters.getDestination()) {
       case S3:
         fileAction.add(new S3Uploader(
@@ -163,8 +163,8 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
 
   @Bean
   @StepScope
-  public ObjectSource<Document> logSource(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
-                                          SolrDAO solrDAO) {
+  public ObjectSource<Document> documentSource(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
+                                               SolrDAO solrDAO) {
 
     return new SolrDocumentSource(solrDAO, parameters.getStart(), computeEnd(parameters.getEnd(), parameters.getTtl()));
   }
