@@ -19,6 +19,9 @@ package:
 test:
 	$(MAVEN_BINARY) clean test
 
+update-version:
+	$(MAVEN_BINARY) versions:set -DnewVersion=$(new-version) -DgenerateBackupPoms=false
+
 rpm:
 	$(MAVEN_BINARY) clean package -Dbuild-rpm -DskipTests
 
