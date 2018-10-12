@@ -195,10 +195,10 @@ public class ArchivingParameters implements Validatable {
 
   @Override
   public void validate() {
-    if (readBlockSize == 0)
+    if (readBlockSize <= 0)
       throw new IllegalArgumentException("The property readBlockSize must be greater than 0!");
 
-    if (writeBlockSize == 0)
+    if (writeBlockSize <= 0)
       throw new IllegalArgumentException("The property writeBlockSize must be greater than 0!");
 
     if (isBlank(fileNameSuffixColumn)) {
