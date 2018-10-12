@@ -14,13 +14,13 @@ Requires JDK 8
 
 ```bash
 # requires rpm-build on Mac OS X
-mvn clean package -Dbuild-rpm
+make rpm
 ```
 
 ### Build Deb package
 
 ```bash
-mvn clean package -Dbuild-deb
+make deb
 ```
 
 ## License
