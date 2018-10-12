@@ -18,15 +18,31 @@
  */
 package org.apache.ambari.infra.job.archive;
 
-import org.apache.solr.client.solrj.SolrQuery;
+import static org.apache.ambari.infra.job.archive.FileNameSuffixFormatter.SOLR_DATETIME_FORMATTER;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.solr.client.solrj.SolrQuery.ORDER.asc;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.solr.client.solrj.SolrQuery.ORDER.asc;
+import org.apache.solr.client.solrj.SolrQuery;
 
 public class SolrQueryBuilder {
+
+  public static String computeEnd(String end, Duration ttl) {
+    return computeEnd(end, OffsetDateTime.now(), ttl);
+  }
+
+  public static String computeEnd(String end, OffsetDateTime now, Duration ttl) {
+    if (isNotBlank(end))
+      return end;
+    if (ttl != null)
+      return SOLR_DATETIME_FORMATTER.format(now.minus(ttl));
+    return null;
+  }
 
   private static final String INTERVAL_START = "start";
   private static final String INTERVAL_END = "end";

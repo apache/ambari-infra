@@ -18,17 +18,17 @@
  */
 package org.apache.ambari.infra.job.archive;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-
 import static java.util.Objects.requireNonNull;
 import static org.apache.ambari.infra.job.archive.SolrDocumentIterator.SOLR_DATE_FORMAT_TEXT;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class FileNameSuffixFormatter {
   public static final DateTimeFormatter SOLR_DATETIME_FORMATTER = DateTimeFormatter.ofPattern(SOLR_DATE_FORMAT_TEXT);
 
-  public static FileNameSuffixFormatter from(DocumentArchivingProperties properties) {
+  public static FileNameSuffixFormatter from(ArchivingParameters properties) {
     return new FileNameSuffixFormatter(properties.getFileNameSuffixColumn(), properties.getFileNameSuffixDateFormat());
   }
 

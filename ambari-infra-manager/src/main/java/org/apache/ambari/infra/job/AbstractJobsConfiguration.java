@@ -18,6 +18,10 @@
  */
 package org.apache.ambari.infra.job;
 
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -27,18 +31,15 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 
-import javax.annotation.PostConstruct;
-import java.util.Map;
-
-public abstract class AbstractJobsConfiguration<T extends JobProperties<T>> {
+public abstract class AbstractJobsConfiguration<TProperties extends JobProperties<TParameters>, TParameters extends Validatable> {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractJobsConfiguration.class);
 
-  private final Map<String, T> propertyMap;
+  private final Map<String, TProperties> propertyMap;
   private final JobScheduler scheduler;
   private final JobBuilderFactory jobs;
   private final JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor;
 
-  protected AbstractJobsConfiguration(Map<String, T> propertyMap, JobScheduler scheduler, JobBuilderFactory jobs, JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor) {
+  protected AbstractJobsConfiguration(Map<String, TProperties> propertyMap, JobScheduler scheduler, JobBuilderFactory jobs, JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor) {
     this.propertyMap = propertyMap;
     this.scheduler = scheduler;
     this.jobs = jobs;

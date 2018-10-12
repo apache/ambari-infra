@@ -3,3 +3,4 @@ out/*
 Profile
 .env
 test-out
+test.db

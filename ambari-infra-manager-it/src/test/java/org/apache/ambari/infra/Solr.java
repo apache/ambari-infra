@@ -55,7 +55,7 @@ public class Solr {
 
   public Solr(String configSetPath) {
     this.configSetPath = configSetPath;
-    this.solrClient = new LBHttpSolrClient.Builder().withBaseSolrUrls(String.format("http://%s:%d/solr/%s_shard1_replica1",
+    this.solrClient = new LBHttpSolrClient.Builder().withBaseSolrUrls(String.format("http://%s:%d/solr/%s_shard1_replica_n1",
             getDockerHost(),
             SOLR_PORT,
             AUDIT_LOGS_COLLECTION)).build();

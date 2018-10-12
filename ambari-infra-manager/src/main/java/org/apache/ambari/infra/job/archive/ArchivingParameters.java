@@ -18,32 +18,41 @@
  */
 package org.apache.ambari.infra.job.archive;
 
-import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import static java.util.Objects.requireNonNull;
+import static org.apache.ambari.infra.job.archive.ExportDestination.HDFS;
+import static org.apache.ambari.infra.job.archive.ExportDestination.LOCAL;
+import static org.apache.ambari.infra.job.archive.ExportDestination.S3;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.ambari.infra.job.JobProperties;
+import org.apache.ambari.infra.job.Validatable;
 import org.apache.ambari.infra.json.DurationToStringConverter;
-import org.springframework.batch.core.JobParameters;
+import org.apache.ambari.infra.json.StringToDurationConverter;
 
-public class DocumentArchivingProperties extends JobProperties<ArchivingParameters> {
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+public class ArchivingParameters implements Validatable {
   private int readBlockSize;
   private int writeBlockSize;
   private ExportDestination destination;
   private String localDestinationDirectory;
   private String fileNameSuffixColumn;
   private String fileNameSuffixDateFormat;
-  private Duration ttl;
-  private SolrProperties solr;
+  private SolrParameters solr;
   private String s3AccessFile;
   private String s3KeyPrefix;
   private String s3BucketName;
   private String s3Endpoint;
-
   private String hdfsEndpoint;
   private String hdfsDestinationDirectory;
+  private String start;
+  private String end;
+  @JsonSerialize(converter = DurationToStringConverter.class)
+  @JsonDeserialize(converter = StringToDurationConverter.class)
+  private Duration ttl;
 
   public int getReadBlockSize() {
     return readBlockSize;
@@ -93,20 +102,12 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     this.fileNameSuffixDateFormat = fileNameSuffixDateFormat;
   }
 
-  public Duration getTtl() {
-    return ttl;
-  }
-
-  public void setTtl(Duration ttl) {
-    this.ttl = ttl;
-  }
-
-  public SolrProperties getSolr() {
+  public SolrParameters getSolr() {
     return solr;
   }
 
-  public void setSolr(SolrProperties query) {
-    this.solr = query;
+  public void setSolr(SolrParameters solr) {
+    this.solr = solr;
   }
 
   public String getS3AccessFile() {
@@ -141,17 +142,6 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     this.s3Endpoint = s3Endpoint;
   }
 
-  public Optional<S3Properties> s3Properties() {
-    if (isBlank(s3BucketName))
-      return Optional.empty();
-
-    return Optional.of(new S3Properties(
-            s3AccessFile,
-            s3KeyPrefix,
-            s3BucketName,
-            s3Endpoint));
-  }
-
   public String getHdfsEndpoint() {
     return hdfsEndpoint;
   }
@@ -168,32 +158,77 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     this.hdfsDestinationDirectory = hdfsDestinationDirectory;
   }
 
-  private int getIntJobParameter(JobParameters jobParameters, String parameterName, int defaultValue) {
-    String valueText = jobParameters.getString(parameterName);
-    if (isBlank(valueText))
-      return defaultValue;
-    return Integer.parseInt(valueText);
+  public Optional<S3Properties> s3Properties() {
+    if (isBlank(s3BucketName))
+      return Optional.empty();
+
+    return Optional.of(new S3Properties(
+            s3AccessFile,
+            s3KeyPrefix,
+            s3BucketName,
+            s3Endpoint));
+  }
+
+  public String getStart() {
+    return start;
+  }
+
+  public void setStart(String start) {
+    this.start = start;
+  }
+
+  public String getEnd() {
+    return end;
+  }
+
+  public void setEnd(String end) {
+    this.end = end;
+  }
+
+  public Duration getTtl() {
+    return ttl;
+  }
+
+  public void setTtl(Duration ttl) {
+    this.ttl = ttl;
   }
 
   @Override
-  public ArchivingParameters merge(JobParameters jobParameters) {
-    ArchivingParameters archivingParameters = new ArchivingParameters();
-    archivingParameters.setReadBlockSize(getIntJobParameter(jobParameters, "readBlockSize", readBlockSize));
-    archivingParameters.setWriteBlockSize(getIntJobParameter(jobParameters, "writeBlockSize", writeBlockSize));
-    archivingParameters.setDestination(ExportDestination.valueOf(jobParameters.getString("destination", destination.name())));
-    archivingParameters.setLocalDestinationDirectory(jobParameters.getString("localDestinationDirectory", localDestinationDirectory));
-    archivingParameters.setFileNameSuffixColumn(jobParameters.getString("fileNameSuffixColumn", fileNameSuffixColumn));
-    archivingParameters.setFileNameSuffixDateFormat(jobParameters.getString("fileNameSuffixDateFormat", fileNameSuffixDateFormat));
-    archivingParameters.setS3AccessFile(jobParameters.getString("s3AccessFile", s3AccessFile));
-    archivingParameters.setS3BucketName(jobParameters.getString("s3BucketName", s3BucketName));
-    archivingParameters.setS3KeyPrefix(jobParameters.getString("s3KeyPrefix", s3KeyPrefix));
-    archivingParameters.setS3Endpoint(jobParameters.getString("s3Endpoint", s3Endpoint));
-    archivingParameters.setHdfsEndpoint(jobParameters.getString("hdfsEndpoint", hdfsEndpoint));
-    archivingParameters.setHdfsDestinationDirectory(jobParameters.getString("hdfsDestinationDirectory", hdfsDestinationDirectory));
-    archivingParameters.setSolr(solr.merge(jobParameters));
-    archivingParameters.setStart(jobParameters.getString("start"));
-    archivingParameters.setEnd(jobParameters.getString("end"));
-    archivingParameters.setTtl(toDuration(jobParameters.getString("ttl", DurationToStringConverter.toString(ttl))));
-    return archivingParameters;
+  public void validate() {
+    if (readBlockSize <= 0)
+      throw new IllegalArgumentException("The property readBlockSize must be greater than 0!");
+
+    if (writeBlockSize <= 0)
+      throw new IllegalArgumentException("The property writeBlockSize must be greater than 0!");
+
+    if (isBlank(fileNameSuffixColumn)) {
+      throw new IllegalArgumentException("The property fileNameSuffixColumn can not be null or empty string!");
+    }
+
+    requireNonNull(destination, "The property destination can not be null!");
+    switch (destination) {
+      case LOCAL:
+        if (isBlank(localDestinationDirectory))
+          throw new IllegalArgumentException(String.format(
+                  "The property localDestinationDirectory can not be null or empty string when destination is set to %s!", LOCAL.name()));
+        break;
+
+      case S3:
+        s3Properties()
+                .orElseThrow(() -> new IllegalArgumentException("S3 related properties must be set if the destination is " + S3.name()))
+                .validate();
+        break;
+
+      case HDFS:
+        if (isBlank(hdfsEndpoint))
+          throw new IllegalArgumentException(String.format(
+                  "The property hdfsEndpoint can not be null or empty string when destination is set to %s!", HDFS.name()));
+        if (isBlank(hdfsDestinationDirectory))
+          throw new IllegalArgumentException(String.format(
+                  "The property hdfsDestinationDirectory can not be null or empty string when destination is set to %s!", HDFS.name()));
+    }
+
+    requireNonNull(solr, "No solr query was specified for archiving job!");
+    solr.validate();
   }
 }
