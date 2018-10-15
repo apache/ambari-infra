@@ -45,10 +45,10 @@ public class FileNameSuffixFormatter {
   public String format(Document document) {
     requireNonNull(document, "Can not format file name suffix: input document is null!");
 
-    if (isBlank(document.get(columnName)))
+    if (isBlank(document.getString(columnName)))
       throw new IllegalArgumentException("The specified document does not have a column " + columnName + " or it's value is blank!");
 
-    return format(document.get(columnName));
+    return format(document.getString(columnName));
   }
 
   public String format(String value) {
