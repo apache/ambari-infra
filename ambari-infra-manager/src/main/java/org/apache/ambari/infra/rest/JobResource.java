@@ -18,9 +18,21 @@
  */
 package org.apache.ambari.infra.rest;
 
-import com.google.common.base.Splitter;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+
 import org.apache.ambari.infra.manager.JobManager;
 import org.apache.ambari.infra.model.ExecutionContextResponse;
 import org.apache.ambari.infra.model.JobDetailsResponse;
@@ -51,21 +63,13 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.context.annotation.Scope;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import java.util.List;
-import java.util.Set;
+import com.google.common.base.Splitter;
 
-@Api(value = "jobs", description = "Job operations")
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
+
+@Api(value = "jobs", description = "Job operations", authorizations = {@Authorization(value = "basicAuth")})
 @Path("jobs")
 @Named
 @Scope("request")
