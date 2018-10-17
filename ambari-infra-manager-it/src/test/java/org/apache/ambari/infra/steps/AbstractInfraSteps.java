@@ -137,7 +137,6 @@ public abstract class AbstractInfraSteps {
     solrInputDocument.addField("level", "INFO");
     solrInputDocument.addField("resource", "/ats/active");
     solrInputDocument.addField("ip", "172.18.0.2");
-    solrInputDocument.addField("evtTime", "2017-12-08T10:23:16.452Z");
     solrInputDocument.addField("req_caller_id", "HIVE_QUERY_ID:ambari-qa_20160317200111_223b3079-4a2d-431c-920f-6ba37ed63e9f");
     solrInputDocument.addField("repoType", 1);
     solrInputDocument.addField("enforcer", "hadoop-acl");
@@ -145,6 +144,7 @@ public abstract class AbstractInfraSteps {
     solrInputDocument.addField("message_md5", "-6778765776916226588");
     solrInputDocument.addField("event_md5", "5627261521757462732");
     solrInputDocument.addField("logtime", new Date(logtime.toInstant().toEpochMilli()));
+    solrInputDocument.addField("evtTime", new Date(logtime.toInstant().toEpochMilli()));
     solrInputDocument.addField("_ttl_", "+7DAYS");
     solrInputDocument.addField("_expire_at_", "2017-12-15T10:23:19.106Z");
     solr.add(solrInputDocument);

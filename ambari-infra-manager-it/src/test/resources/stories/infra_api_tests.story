@@ -44,7 +44,7 @@ Then solr does not contain documents between 2012-10-09T05:00:00.000Z and 2012-1
 Scenario: Archiving documents to hdfs
 
 Given 1000 documents in solr with logtime from 2014-01-04T05:00:00.000Z to 2014-01-06T20:00:00.000Z
-When start archive_audit_logs job with parameters start=2014-01-04T05:00:00.000Z,end=2014-01-06T20:00:00.000Z,destination=HDFS after 2 seconds
+When start archive_audit_logs job with parameters start=2014-01-04T05:00:00.000Z,end=2014-01-06T20:00:00.000Z,destination=HDFS,hdfsDestinationDirectory=/test_audit_logs after 2 seconds
 Then Check 7 files exists on hdfs with filenames containing the text audit_logs_-_2014-01-0 in the folder /test_audit_logs after 10 seconds
 And solr does not contain documents between 2014-01-04T05:00:00.000Z and 2014-01-06T20:00:00.000Z after 10 seconds
 
