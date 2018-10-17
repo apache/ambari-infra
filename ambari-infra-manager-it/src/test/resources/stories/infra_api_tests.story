@@ -11,6 +11,7 @@ Given 10 documents in solr with logtime from 2010-10-09T05:00:00.000Z to 2010-10
 When start archive_audit_logs job with parameters writeBlockSize=3,start=2010-10-09T00:00:00.000Z,end=2010-10-11T00:00:00.000Z after 2 seconds
 Then Check 4 files exists on s3 server with filenames containing the text solr_archive_audit_logs_-_2010-10-09 after 20 seconds
 And solr does not contain documents between 2010-10-09T05:00:00.000Z and 2010-10-09T20:00:00.000Z after 5 seconds
+And Check the files solr_archive_audit_logs_-_2010-10-09 contains the archived documents
 
 
 Scenario: Running archiving job with a bigger start value than end value exports and deletes 0 documents
@@ -32,6 +33,7 @@ When delete file with key solr_archive_audit_logs_-_2011-10-09T08-00-00.000Z.jso
 And restart archive_audit_logs job within 2 seconds
 Then Check 10 files exists on s3 server with filenames containing the text solr_archive_audit_logs_-_2011-10-09 after 20 seconds
 And solr does not contain documents between 2011-10-09T05:00:00.000Z and 2011-10-09T20:00:00.000Z after 5 seconds
+And Check the files solr_archive_audit_logs_-_2011-10-09 contains the archived documents
 
 
 Scenario: After Deleting job deletes documents from solr no document found in the specified interval
@@ -65,3 +67,4 @@ And stop job archive_audit_logs after at least 1 file exists in s3 with filename
 Then Less than 20 files exists on s3 server with filenames containing the text solr_archive_audit_logs_-_2014-03-09 after 20 seconds
 When restart archive_audit_logs job within 10 seconds
 Then Check 25 files exists on s3 server with filenames containing the text solr_archive_audit_logs_-_2014-03-09 after 20 seconds
+And Check the files solr_archive_audit_logs_-_2014-03-09 contains the archived documents
