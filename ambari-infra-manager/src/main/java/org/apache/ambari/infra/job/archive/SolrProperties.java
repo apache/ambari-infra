@@ -94,7 +94,12 @@ public class SolrProperties {
       sortColumns.add(sortValue);
       ++i;
     }
-    solrParameters.setSortColumn(sortColumns.toArray(new String[0]));
+    if (!sortColumns.isEmpty()) {
+      solrParameters.setSortColumn(sortColumns.toArray(new String[0]));
+    }
+    else {
+      solrParameters.setSortColumn(sortColumn);
+    }
 
     return solrParameters;
   }

@@ -96,4 +96,13 @@ public class S3Client {
       throw new RuntimeException(e);
     }
   }
+
+  public InputStream getObject(String key) {
+    try {
+      return s3client.getObject(bucket, key);
+    }
+    catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
 }

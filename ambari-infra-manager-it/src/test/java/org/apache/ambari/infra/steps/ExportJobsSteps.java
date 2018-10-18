@@ -18,6 +18,7 @@
  */
 package org.apache.ambari.infra.steps;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.ambari.infra.OffsetDateTimeConverter.SOLR_DATETIME_FORMATTER;
 import static org.apache.ambari.infra.TestUtil.doWithin;
@@ -26,19 +27,24 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertThat;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.ambari.infra.InfraClient;
 import org.apache.ambari.infra.JobExecutionInfo;
 import org.apache.ambari.infra.S3Client;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -50,16 +56,21 @@ import org.jbehave.core.annotations.When;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class ExportJobsSteps extends AbstractInfraSteps {
   private static final Logger LOG = LoggerFactory.getLogger(ExportJobsSteps.class);
+  private Set<String> documentIds = new HashSet<>();
 
   private Map<String, JobExecutionInfo> launchedJobs = new HashMap<>();
 
   @Given("$count documents in solr")
   public void addDocuments(int count) {
     OffsetDateTime intervalEnd = OffsetDateTime.now();
+    documentIds.clear();
     for (int i = 0; i < count; ++i) {
-      addDocument(intervalEnd.minusMinutes(i % (count / 10)));
+      documentIds.add(addDocument(intervalEnd.minusMinutes(i % (count / 10))).get("id").getValue().toString());
     }
     getSolr().commit();
   }
@@ -68,13 +79,15 @@ public class ExportJobsSteps extends AbstractInfraSteps {
   public void addDocuments(long count, OffsetDateTime startLogtime, OffsetDateTime endLogtime) {
     Duration duration = Duration.between(startLogtime, endLogtime);
     long increment = duration.toNanos() / count;
-    for (int i = 0; i < count; ++i)
-      addDocument(startLogtime.plusNanos(increment * i));
+    documentIds.clear();
+    for (int i = 0; i < count; ++i) {
+      documentIds.add(addDocument(startLogtime.plusNanos(increment * i)).get("id").getValue().toString());
+    }
     getSolr().commit();
   }
 
   @Given("a file on s3 with key $key")
-  public void addFileToS3(String key) throws Exception {
+  public void addFileToS3(String key) {
     getS3client().putObject(key, "anything".getBytes());
   }
 
@@ -203,5 +216,27 @@ public class ExportJobsSteps extends AbstractInfraSteps {
     assertThat(Arrays.stream(files)
             .filter(file -> file.getName().contains(text))
             .count(), is(count));
+  }
+
+  private static final ObjectMapper json = new ObjectMapper();
+
+  @Then("Check the files $fileNamePart contains the archived documents")
+  public void checkStoredDocumentIds(String fileNamePart) throws Exception {
+    S3Client s3Client = getS3client();
+    int size = documentIds.size();
+    Set<String> storedDocumentIds = new HashSet<>();
+    for (String objectKey : s3Client.listObjectKeys(fileNamePart)) {
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(new BZip2CompressorInputStream(s3Client.getObject(objectKey)), UTF_8))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          Map<String, Object> document = json.readValue(line, new TypeReference<HashMap<String, Object>>() {});
+          String id = document.get("id").toString();
+          storedDocumentIds.add(id);
+          documentIds.remove(id);
+        }
+      }
+    }
+    assertThat(documentIds.size(), is(0));
+    assertThat(storedDocumentIds.size(), is(size));
   }
 }

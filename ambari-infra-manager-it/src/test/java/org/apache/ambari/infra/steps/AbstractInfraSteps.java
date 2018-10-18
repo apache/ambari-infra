@@ -114,7 +114,7 @@ public abstract class AbstractInfraSteps {
     }
   }
 
-  protected void addDocument(OffsetDateTime logtime) {
+  protected SolrInputDocument addDocument(OffsetDateTime logtime) {
     SolrInputDocument solrInputDocument = new SolrInputDocument();
     solrInputDocument.addField("logType", "HDFSAudit");
     solrInputDocument.addField("cluster", "cl1");
@@ -148,6 +148,7 @@ public abstract class AbstractInfraSteps {
     solrInputDocument.addField("_ttl_", "+7DAYS");
     solrInputDocument.addField("_expire_at_", "2017-12-15T10:23:19.106Z");
     solr.add(solrInputDocument);
+    return solrInputDocument;
   }
 
   @AfterStories
