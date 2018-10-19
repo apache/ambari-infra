@@ -1,5 +1,15 @@
 package org.apache.ambari.infra.job;
 
+import static org.easymock.EasyMock.eq;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.isA;
+
+import java.util.Optional;
+import java.util.concurrent.ScheduledFuture;
+
+import javax.batch.operations.NoSuchJobException;
+
 import org.apache.ambari.infra.manager.Jobs;
 import org.easymock.EasyMockRunner;
 import org.easymock.EasyMockSupport;
@@ -13,15 +23,6 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
-
-import javax.batch.operations.NoSuchJobException;
-import java.util.Optional;
-import java.util.concurrent.ScheduledFuture;
-
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.isA;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -106,6 +107,21 @@ public class JobSchedulerTest extends EasyMockSupport {
     jobExecution.setExitStatus(ExitStatus.FAILED);
     expect(jobs.lastRun(jobName)).andReturn(Optional.of(jobExecution));
     jobs.restart(1L); expectLastCall();
+    expect(taskScheduler.schedule(isA(Runnable.class), eq(new CronTrigger(schedulingProperties.getCron())))).andReturn(scheduledFuture);
+    replayAll();
+
+    jobScheduler.schedule(jobName, schedulingProperties);
+  }
+
+  @Test
+  public void testScheduleWhenPreviousExecutionIsUnknownJobIsAbandonedAndScheduled() throws Exception {
+    String jobName = "job0";
+    SchedulingProperties schedulingProperties = new SchedulingProperties();
+    schedulingProperties.setCron("* * * * * ?");
+    JobExecution jobExecution = new JobExecution(1L, new JobParameters());
+    jobExecution.setExitStatus(ExitStatus.UNKNOWN);
+    expect(jobs.lastRun(jobName)).andReturn(Optional.of(jobExecution));
+    jobs.abandon(1L); expectLastCall();
     expect(taskScheduler.schedule(isA(Runnable.class), eq(new CronTrigger(schedulingProperties.getCron())))).andReturn(scheduledFuture);
     replayAll();
 

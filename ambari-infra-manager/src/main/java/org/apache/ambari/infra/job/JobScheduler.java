@@ -63,12 +63,14 @@ public class JobScheduler {
   }
 
   private void restartIfFailed(JobExecution jobExecution) {
-    if (jobExecution.getExitStatus() == ExitStatus.FAILED) {
-      try {
+    try {
+      if (ExitStatus.FAILED.compareTo(jobExecution.getExitStatus()) == 0) {
         jobs.restart(jobExecution.getId());
-      } catch (JobInstanceAlreadyCompleteException | NoSuchJobException | JobExecutionAlreadyRunningException | JobRestartException | JobParametersInvalidException | NoSuchJobExecutionException e) {
-        throw new RuntimeException(e);
+      } else if (ExitStatus.UNKNOWN.compareTo(jobExecution.getExitStatus()) == 0) {
+        jobs.abandon(jobExecution.getId());
       }
+    } catch (JobInstanceAlreadyCompleteException | NoSuchJobException | JobExecutionAlreadyRunningException | JobRestartException | JobParametersInvalidException | NoSuchJobExecutionException e) {
+      throw new RuntimeException(e);
     }
   }
 

@@ -18,7 +18,19 @@
  */
 package org.apache.ambari.infra.manager;
 
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.ambari.infra.model.ExecutionContextResponse;
 import org.apache.ambari.infra.model.JobDetailsResponse;
 import org.apache.ambari.infra.model.JobExecutionDetailsResponse;
@@ -50,17 +62,7 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TimeZone;
+import com.google.common.collect.Lists;
 
 @Named
 public class JobManager implements Jobs {
@@ -108,6 +110,11 @@ public class JobManager implements Jobs {
   @Override
   public Optional<JobExecution> lastRun(String jobName) throws NoSuchJobException {
     return jobService.listJobExecutionsForJob(jobName, 0, 1).stream().findFirst();
+  }
+
+  @Override
+  public void abandon(Long jobExecution) throws NoSuchJobExecutionException, JobExecutionAlreadyRunningException {
+    jobService.abandon(jobExecution);
   }
 
   /**
