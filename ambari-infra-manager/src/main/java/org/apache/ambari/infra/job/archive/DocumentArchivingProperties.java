@@ -19,6 +19,7 @@
 package org.apache.ambari.infra.job.archive;
 
 import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import static org.apache.ambari.infra.json.StringToFsPermissionConverter.toFsPermission;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.time.Duration;
@@ -26,6 +27,8 @@ import java.util.Optional;
 
 import org.apache.ambari.infra.job.JobProperties;
 import org.apache.ambari.infra.json.DurationToStringConverter;
+import org.apache.ambari.infra.json.FsPermissionToStringConverter;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.springframework.batch.core.JobParameters;
 
 public class DocumentArchivingProperties extends JobProperties<ArchivingParameters> {
@@ -44,6 +47,7 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
 
   private String hdfsEndpoint;
   private String hdfsDestinationDirectory;
+  private FsPermission hdfsFilePermission;
 
   public int getReadBlockSize() {
     return readBlockSize;
@@ -164,6 +168,14 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     return hdfsDestinationDirectory;
   }
 
+  public FsPermission getHdfsFilePermission() {
+    return hdfsFilePermission;
+  }
+
+  public void setHdfsFilePermission(FsPermission hdfsFilePermission) {
+    this.hdfsFilePermission = hdfsFilePermission;
+  }
+
   public void setHdfsDestinationDirectory(String hdfsDestinationDirectory) {
     this.hdfsDestinationDirectory = hdfsDestinationDirectory;
   }
@@ -190,6 +202,7 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     archivingParameters.setS3Endpoint(jobParameters.getString("s3Endpoint", s3Endpoint));
     archivingParameters.setHdfsEndpoint(jobParameters.getString("hdfsEndpoint", hdfsEndpoint));
     archivingParameters.setHdfsDestinationDirectory(jobParameters.getString("hdfsDestinationDirectory", hdfsDestinationDirectory));
+    archivingParameters.setHdfsFilePermission(toFsPermission(jobParameters.getString("hdfsFilePermission", FsPermissionToStringConverter.toString(hdfsFilePermission))));
     archivingParameters.setSolr(solr.merge(jobParameters));
     archivingParameters.setStart(jobParameters.getString("start"));
     archivingParameters.setEnd(jobParameters.getString("end"));

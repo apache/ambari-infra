@@ -18,22 +18,26 @@
  */
 package org.apache.ambari.infra.job.archive;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+
 public class HdfsUploader extends AbstractFileAction {
 
+  private static final String DEFAULT_FILE_PERMISSION = "640";
   private final Configuration configuration;
   private final Path destinationDirectory;
+  private final FsPermission fsPermission;
 
-  public HdfsUploader(Configuration configuration, Path destinationDirectory) {
+  public HdfsUploader(Configuration configuration, Path destinationDirectory, FsPermission fsPermission) {
     this.destinationDirectory = destinationDirectory;
     this.configuration = configuration;
+    this.fsPermission = fsPermission == null ? new FsPermission(DEFAULT_FILE_PERMISSION) : fsPermission;
   }
 
   @Override
@@ -45,6 +49,7 @@ public class HdfsUploader extends AbstractFileAction {
       }
 
       fileSystem.copyFromLocalFile(new Path(inputFile.getAbsolutePath()), destination);
+      fileSystem.setPermission(destination, fsPermission);
 
       return inputFile;
     }

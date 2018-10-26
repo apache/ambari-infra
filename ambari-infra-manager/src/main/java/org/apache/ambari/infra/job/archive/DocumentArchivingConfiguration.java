@@ -104,7 +104,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
       case HDFS:
         org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
         conf.set("fs.defaultFS", parameters.getHdfsEndpoint());
-        fileAction.add(new HdfsUploader(conf, new Path(parameters.getHdfsDestinationDirectory())));
+        fileAction.add(new HdfsUploader(conf, new Path(parameters.getHdfsDestinationDirectory()), parameters.getHdfsFilePermission()));
         break;
       case LOCAL:
         baseDir = new File(parameters.getLocalDestinationDirectory());
