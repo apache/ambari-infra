@@ -29,7 +29,9 @@ import java.util.Optional;
 
 import org.apache.ambari.infra.job.Validatable;
 import org.apache.ambari.infra.json.DurationToStringConverter;
+import org.apache.ambari.infra.json.FsPermissionToStringConverter;
 import org.apache.ambari.infra.json.StringToDurationConverter;
+import org.apache.ambari.infra.json.StringToFsPermissionConverter;
 import org.apache.hadoop.fs.permission.FsPermission;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -49,6 +51,8 @@ public class ArchivingParameters implements Validatable {
   private String s3Endpoint;
   private String hdfsEndpoint;
   private String hdfsDestinationDirectory;
+  @JsonSerialize(converter = FsPermissionToStringConverter.class)
+  @JsonDeserialize(converter = StringToFsPermissionConverter.class)
   private FsPermission hdfsFilePermission;
   private String start;
   private String end;
