@@ -67,7 +67,7 @@ public class JobScheduler {
       if (ExitStatus.FAILED.compareTo(jobExecution.getExitStatus()) == 0) {
         jobs.restart(jobExecution.getId());
       } else if (ExitStatus.UNKNOWN.compareTo(jobExecution.getExitStatus()) == 0) {
-        jobs.abandon(jobExecution.getId());
+        jobs.stopAndAbandon(jobExecution.getId());
       }
     } catch (JobInstanceAlreadyCompleteException | NoSuchJobException | JobExecutionAlreadyRunningException | JobRestartException | JobParametersInvalidException | NoSuchJobExecutionException e) {
       throw new RuntimeException(e);
