@@ -40,5 +40,5 @@ public interface Jobs {
 
   Optional<JobExecution> lastRun(String jobName) throws NoSuchJobException, NoSuchJobExecutionException;
 
-  void abandon(Long jobExecution) throws NoSuchJobExecutionException, JobExecutionAlreadyRunningException;
+  void stopAndAbandon(Long jobExecution) throws NoSuchJobExecutionException, JobExecutionAlreadyRunningException;
 }

@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.ambari.infra.job;
 
 import static org.easymock.EasyMock.eq;
@@ -24,24 +42,6 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 @RunWith(EasyMockRunner.class)
 public class JobSchedulerTest extends EasyMockSupport {
 
@@ -54,12 +54,12 @@ public class JobSchedulerTest extends EasyMockSupport {
   private JobScheduler jobScheduler;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     jobScheduler = new JobScheduler(taskScheduler, jobs);
   }
 
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
     verifyAll();
   }
 
@@ -121,7 +121,7 @@ public class JobSchedulerTest extends EasyMockSupport {
     JobExecution jobExecution = new JobExecution(1L, new JobParameters());
     jobExecution.setExitStatus(ExitStatus.UNKNOWN);
     expect(jobs.lastRun(jobName)).andReturn(Optional.of(jobExecution));
-    jobs.abandon(1L); expectLastCall();
+    jobs.stopAndAbandon(1L); expectLastCall();
     expect(taskScheduler.schedule(isA(Runnable.class), eq(new CronTrigger(schedulingProperties.getCron())))).andReturn(scheduledFuture);
     replayAll();
 

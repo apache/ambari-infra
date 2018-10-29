@@ -113,8 +113,13 @@ public class JobManager implements Jobs {
   }
 
   @Override
-  public void abandon(Long jobExecution) throws NoSuchJobExecutionException, JobExecutionAlreadyRunningException {
-    jobService.abandon(jobExecution);
+  public void stopAndAbandon(Long jobExecutionId) throws NoSuchJobExecutionException, JobExecutionAlreadyRunningException {
+    try {
+      jobService.stop(jobExecutionId);
+    } catch (JobExecutionNotRunningException e) {
+      LOG.warn(String.format("Job is not running jobExecutionId=%d", jobExecutionId), e.getMessage());
+    }
+    jobService.abandon(jobExecutionId);
   }
 
   /**
