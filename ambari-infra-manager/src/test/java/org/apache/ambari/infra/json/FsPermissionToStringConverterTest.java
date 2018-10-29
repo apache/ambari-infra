@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.conf;
+package org.apache.ambari.infra.json;
 
-import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
-import java.time.Duration;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.junit.Test;
 
-import javax.annotation.Nullable;
-import javax.inject.Named;
+public class FsPermissionToStringConverterTest {
+  @Test
+  public void testConvertWhenInputIsNotNull() {
+    assertThat(new FsPermissionToStringConverter().convert(new FsPermission("640")), is("640"));
+  }
 
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
-import org.springframework.core.convert.converter.Converter;
-
-@Named
-@ConfigurationPropertiesBinding
-public class DurationConverter implements Converter<String, Duration> {
-  @Override
-  public Duration convert(@Nullable String s) {
-    return toDuration(s);
+  @Test
+  public void testConvertWhenInputIsNull() {
+    assertThat(new FsPermissionToStringConverter().convert(null), is(nullValue()));
   }
 }

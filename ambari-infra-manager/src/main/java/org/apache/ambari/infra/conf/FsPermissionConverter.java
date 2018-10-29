@@ -18,21 +18,20 @@
  */
 package org.apache.ambari.infra.conf;
 
-import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
-
-import java.time.Duration;
+import static org.apache.ambari.infra.json.StringToFsPermissionConverter.toFsPermission;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.convert.converter.Converter;
 
 @Named
 @ConfigurationPropertiesBinding
-public class DurationConverter implements Converter<String, Duration> {
+public class FsPermissionConverter implements Converter<String, FsPermission> {
   @Override
-  public Duration convert(@Nullable String s) {
-    return toDuration(s);
+  public FsPermission convert(@Nullable String s) {
+    return toFsPermission(s);
   }
 }

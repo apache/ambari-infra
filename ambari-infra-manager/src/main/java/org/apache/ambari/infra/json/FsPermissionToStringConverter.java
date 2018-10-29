@@ -16,23 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.conf;
+package org.apache.ambari.infra.json;
 
-import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import org.apache.hadoop.fs.permission.FsPermission;
 
-import java.time.Duration;
+import com.fasterxml.jackson.databind.util.StdConverter;
 
-import javax.annotation.Nullable;
-import javax.inject.Named;
-
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
-import org.springframework.core.convert.converter.Converter;
-
-@Named
-@ConfigurationPropertiesBinding
-public class DurationConverter implements Converter<String, Duration> {
+public class FsPermissionToStringConverter extends StdConverter<FsPermission, String> {
   @Override
-  public Duration convert(@Nullable String s) {
-    return toDuration(s);
+  public String convert(FsPermission value) {
+    return toString(value);
+  }
+
+  public static String toString(FsPermission value) {
+    return value == null ? null : Short.toString(value.toOctal());
   }
 }
