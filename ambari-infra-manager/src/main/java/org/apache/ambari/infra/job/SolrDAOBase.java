@@ -18,13 +18,17 @@
  */
 package org.apache.ambari.infra.job;
 
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.zookeeper.client.ConnectStringParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SolrDAOBase {
   private static final Logger LOG = LoggerFactory.getLogger(SolrDAOBase.class);
@@ -57,7 +61,10 @@ public abstract class SolrDAOBase {
   }
 
   protected CloudSolrClient createClient() {
-    CloudSolrClient client = new CloudSolrClient.Builder().withZkHost(zooKeeperConnectionString).build();
+    ConnectStringParser connectStringParser = new ConnectStringParser(zooKeeperConnectionString);
+    CloudSolrClient client = new CloudSolrClient.Builder(
+            connectStringParser.getServerAddresses().stream().map(InetSocketAddress::toString).collect(Collectors.toList()),
+            Optional.ofNullable(connectStringParser.getChrootPath())).build();
     client.setDefaultCollection(defaultCollection);
     return client;
   }
