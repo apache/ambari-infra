@@ -21,6 +21,7 @@ package org.apache.ambari.infra.job;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -62,9 +63,11 @@ public abstract class SolrDAOBase {
 
   protected CloudSolrClient createClient() {
     ConnectStringParser connectStringParser = new ConnectStringParser(zooKeeperConnectionString);
+    List<String> zkHosts = connectStringParser.getServerAddresses().stream()
+            .map(InetSocketAddress::toString)
+            .collect(Collectors.toList());
     CloudSolrClient client = new CloudSolrClient.Builder(
-            connectStringParser.getServerAddresses().stream().map(InetSocketAddress::toString).collect(Collectors.toList()),
-            Optional.ofNullable(connectStringParser.getChrootPath())).build();
+            zkHosts, Optional.ofNullable(connectStringParser.getChrootPath())).build();
     client.setDefaultCollection(defaultCollection);
     return client;
   }
