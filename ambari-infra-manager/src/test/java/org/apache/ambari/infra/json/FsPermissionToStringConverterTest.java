@@ -1,12 +1,3 @@
-package org.apache.ambari.infra.json;
-
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.junit.Test;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,6 +16,15 @@ import org.junit.Test;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.ambari.infra.json;
+
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.junit.Test;
+
 public class FsPermissionToStringConverterTest {
   @Test
   public void testConvertWhenInputIsNotNull() {
