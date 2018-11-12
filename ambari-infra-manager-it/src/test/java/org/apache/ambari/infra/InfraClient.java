@@ -18,10 +18,16 @@
  */
 package org.apache.ambari.infra;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.apache.commons.lang.StringUtils.isBlank;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -36,15 +42,10 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 // TODO: use swagger
 public class InfraClient implements AutoCloseable {
@@ -96,6 +97,12 @@ public class InfraClient implements AutoCloseable {
     try {
       String responseText = execute(new HttpPost(uriBuilder.build())).getBody();
       Map<String, Object> responseContent = new ObjectMapper().readValue(responseText, new TypeReference<HashMap<String,Object>>() {});
+      if (!responseContent.containsKey("jobId"))
+        throw new NullPointerException("jobId is not found in start job responseContent");
+      if (!responseContent.containsKey("jobExecutionData"))
+        throw new NullPointerException("jobExecutionData is not found in start job responseContent");
+      if (!((Map)responseContent.get("jobExecutionData")).containsKey("id"))
+        throw new NullPointerException("id is not found in jobExecutionData");
       return new JobExecutionInfo(responseContent.get("jobId").toString(), ((Map)responseContent.get("jobExecutionData")).get("id").toString());
     } catch (URISyntaxException | JsonParseException | JsonMappingException e) {
       throw new RuntimeException(e);

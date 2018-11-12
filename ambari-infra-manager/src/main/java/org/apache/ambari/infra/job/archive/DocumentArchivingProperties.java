@@ -23,7 +23,6 @@ import static org.apache.ambari.infra.json.StringToFsPermissionConverter.toFsPer
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.time.Duration;
-import java.util.Optional;
 
 import org.apache.ambari.infra.job.JobProperties;
 import org.apache.ambari.infra.json.DurationToStringConverter;
@@ -40,6 +39,7 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
   private String fileNameSuffixDateFormat;
   private Duration ttl;
   private SolrProperties solr;
+
   private String s3AccessFile;
   private String s3KeyPrefix;
   private String s3BucketName;
@@ -48,6 +48,8 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
   private String hdfsEndpoint;
   private String hdfsDestinationDirectory;
   private FsPermission hdfsFilePermission;
+  private String hdfsKerberosPrincipal;
+  private String hdfsKerberosKeytabPath;
 
   public int getReadBlockSize() {
     return readBlockSize;
@@ -145,17 +147,6 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     this.s3Endpoint = s3Endpoint;
   }
 
-  public Optional<S3Properties> s3Properties() {
-    if (isBlank(s3BucketName))
-      return Optional.empty();
-
-    return Optional.of(new S3Properties(
-            s3AccessFile,
-            s3KeyPrefix,
-            s3BucketName,
-            s3Endpoint));
-  }
-
   public String getHdfsEndpoint() {
     return hdfsEndpoint;
   }
@@ -178,6 +169,22 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
 
   public void setHdfsDestinationDirectory(String hdfsDestinationDirectory) {
     this.hdfsDestinationDirectory = hdfsDestinationDirectory;
+  }
+
+  public String getHdfsKerberosPrincipal() {
+    return hdfsKerberosPrincipal;
+  }
+
+  public void setHdfsKerberosPrincipal(String hdfsKerberosPrincipal) {
+    this.hdfsKerberosPrincipal = hdfsKerberosPrincipal;
+  }
+
+  public String getHdfsKerberosKeytabPath() {
+    return hdfsKerberosKeytabPath;
+  }
+
+  public void setHdfsKerberosKeytabPath(String hdfsKerberosKeytabPath) {
+    this.hdfsKerberosKeytabPath = hdfsKerberosKeytabPath;
   }
 
   private int getIntJobParameter(JobParameters jobParameters, String parameterName, int defaultValue) {
@@ -203,6 +210,8 @@ public class DocumentArchivingProperties extends JobProperties<ArchivingParamete
     archivingParameters.setHdfsEndpoint(jobParameters.getString("hdfsEndpoint", hdfsEndpoint));
     archivingParameters.setHdfsDestinationDirectory(jobParameters.getString("hdfsDestinationDirectory", hdfsDestinationDirectory));
     archivingParameters.setHdfsFilePermission(toFsPermission(jobParameters.getString("hdfsFilePermission", FsPermissionToStringConverter.toString(hdfsFilePermission))));
+    archivingParameters.setHdfsKerberosPrincipal(jobParameters.getString("hdfsKerberosPrincipal", hdfsKerberosPrincipal));
+    archivingParameters.setHdfsKerberosKeytabPath(jobParameters.getString("hdfsKerberosKeytabPath", hdfsKerberosKeytabPath));
     archivingParameters.setSolr(solr.merge(jobParameters));
     archivingParameters.setStart(jobParameters.getString("start"));
     archivingParameters.setEnd(jobParameters.getString("end"));
