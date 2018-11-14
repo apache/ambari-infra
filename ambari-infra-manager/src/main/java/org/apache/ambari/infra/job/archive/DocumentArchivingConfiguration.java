@@ -32,8 +32,9 @@ import org.apache.ambari.infra.job.AbstractJobsConfiguration;
 import org.apache.ambari.infra.job.JobContextRepository;
 import org.apache.ambari.infra.job.JobScheduler;
 import org.apache.ambari.infra.job.ObjectSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.hadoop.fs.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -48,8 +49,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<DocumentArchivingProperties, ArchivingParameters> {
-  private static final Logger LOG = LoggerFactory.getLogger(DocumentArchivingConfiguration.class);
+public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<ArchivingProperties, ArchivingProperties> {
+  private static final Logger logger = LogManager.getLogger(DocumentArchivingConfiguration.class);
   private static final DocumentWiper NOT_DELETE = (firstDocument, lastDocument) -> { };
 
   private final StepBuilderFactory steps;
@@ -85,7 +86,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
   @StepScope
   public DocumentExporter documentExporter(DocumentItemReader documentItemReader,
                                            @Value("#{stepExecution.jobExecution.jobId}") String jobId,
-                                           @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
+                                           @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingProperties parameters,
                                            InfraManagerDataConfig infraManagerDataConfig,
                                            @Value("#{jobParameters[end]}") String intervalEnd,
                                            DocumentWiper documentWiper,
@@ -118,10 +119,10 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
                     parameters.getSolr().getCollection(),
                     jobId,
                     isBlank(intervalEnd) ? "" : fileNameSuffixFormatter.format(intervalEnd)));
-    LOG.info("Destination directory path={}", destinationDirectory);
+    logger.info("Destination directory path={}", destinationDirectory);
     if (!destinationDirectory.exists()) {
       if (!destinationDirectory.mkdirs()) {
-        LOG.warn("Unable to create directory {}", destinationDirectory);
+        logger.warn("Unable to create directory {}", destinationDirectory);
       }
     }
 
@@ -134,7 +135,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
 
   @Bean
   @StepScope
-  public DocumentWiper documentWiper(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
+  public DocumentWiper documentWiper(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingProperties parameters,
                                      SolrDAO solrDAO) {
     if (isBlank(parameters.getSolr().getDeleteQueryText()))
       return NOT_DELETE;
@@ -143,26 +144,26 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
 
   @Bean
   @StepScope
-  public SolrDAO solrDAO(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters) {
+  public SolrDAO solrDAO(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingProperties parameters) {
     return new SolrDAO(parameters.getSolr());
   }
 
   private File outFile(String collection, File directoryPath, String suffix) {
     File file = new File(directoryPath, String.format("%s_-_%s.json", collection, suffix));
-    LOG.info("Exporting to temp file {}", file.getAbsolutePath());
+    logger.info("Exporting to temp file {}", file.getAbsolutePath());
     return file;
   }
 
   @Bean
   @StepScope
   public DocumentItemReader reader(ObjectSource<Document> documentSource,
-                                   @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters properties) {
+                                   @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingProperties properties) {
     return new DocumentItemReader(documentSource, properties.getReadBlockSize());
   }
 
   @Bean
   @StepScope
-  public ObjectSource<Document> documentSource(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingParameters parameters,
+  public ObjectSource<Document> documentSource(@Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") ArchivingProperties parameters,
                                                SolrDAO solrDAO) {
 
     return new SolrDocumentSource(solrDAO, parameters.getStart(), computeEnd(parameters.getEnd(), parameters.getTtl()));

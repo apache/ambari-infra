@@ -48,8 +48,8 @@ import org.apache.ambari.infra.model.StepExecutionContextResponse;
 import org.apache.ambari.infra.model.StepExecutionInfoResponse;
 import org.apache.ambari.infra.model.StepExecutionProgressResponse;
 import org.apache.ambari.infra.model.StepExecutionRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.batch.admin.service.NoSuchStepExecutionException;
 import org.springframework.batch.admin.web.JobInfo;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -74,7 +74,7 @@ import io.swagger.annotations.Authorization;
 @Named
 @Scope("request")
 public class JobResource {
-  private static final Logger LOG = LoggerFactory.getLogger(JobResource.class);
+  private static final Logger logger = LogManager.getLogger(JobResource.class);
 
   @Inject
   private JobManager jobManager;
@@ -98,7 +98,7 @@ public class JobResource {
     String params = request.getParams();
     JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
     if (params != null) {
-      LOG.info("Parsing parameters of job {} '{}'", jobName, params);
+      logger.info("Parsing parameters of job {} '{}'", jobName, params);
       Splitter.on(',')
               .trimResults()
               .withKeyValueSeparator(Splitter.on('=').limit(2).trimResults())

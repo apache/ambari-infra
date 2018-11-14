@@ -22,29 +22,33 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.ambari.infra.job.archive.ExportDestination.HDFS;
 import static org.apache.ambari.infra.job.archive.ExportDestination.LOCAL;
 import static org.apache.ambari.infra.job.archive.ExportDestination.S3;
+import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import static org.apache.ambari.infra.json.StringToFsPermissionConverter.toFsPermission;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.time.Duration;
 import java.util.Optional;
 
+import org.apache.ambari.infra.job.JobProperties;
 import org.apache.ambari.infra.job.Validatable;
 import org.apache.ambari.infra.json.DurationToStringConverter;
 import org.apache.ambari.infra.json.FsPermissionToStringConverter;
 import org.apache.ambari.infra.json.StringToDurationConverter;
 import org.apache.ambari.infra.json.StringToFsPermissionConverter;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.springframework.batch.core.JobParameters;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-public class ArchivingParameters implements Validatable {
+public class ArchivingProperties extends JobProperties<ArchivingProperties> implements Validatable {
   private int readBlockSize;
   private int writeBlockSize;
   private ExportDestination destination;
   private String localDestinationDirectory;
   private String fileNameSuffixColumn;
   private String fileNameSuffixDateFormat;
-  private SolrParameters solr;
+  private SolrProperties solr;
   private String s3AccessFile;
   private String s3KeyPrefix;
   private String s3BucketName;
@@ -110,11 +114,11 @@ public class ArchivingParameters implements Validatable {
     this.fileNameSuffixDateFormat = fileNameSuffixDateFormat;
   }
 
-  public SolrParameters getSolr() {
+  public SolrProperties getSolr() {
     return solr;
   }
 
-  public void setSolr(SolrParameters solr) {
+  public void setSolr(SolrProperties solr) {
     this.solr = solr;
   }
 
@@ -271,5 +275,37 @@ public class ArchivingParameters implements Validatable {
 
     requireNonNull(solr, "No solr query was specified for archiving job!");
     solr.validate();
+  }
+
+  @Override
+  public ArchivingProperties merge(JobParameters jobParameters) {
+    ArchivingProperties archivingProperties = new ArchivingProperties();
+    archivingProperties.setReadBlockSize(getIntJobParameter(jobParameters, "readBlockSize", readBlockSize));
+    archivingProperties.setWriteBlockSize(getIntJobParameter(jobParameters, "writeBlockSize", writeBlockSize));
+    archivingProperties.setDestination(ExportDestination.valueOf(jobParameters.getString("destination", destination.name())));
+    archivingProperties.setLocalDestinationDirectory(jobParameters.getString("localDestinationDirectory", localDestinationDirectory));
+    archivingProperties.setFileNameSuffixColumn(jobParameters.getString("fileNameSuffixColumn", fileNameSuffixColumn));
+    archivingProperties.setFileNameSuffixDateFormat(jobParameters.getString("fileNameSuffixDateFormat", fileNameSuffixDateFormat));
+    archivingProperties.setS3AccessFile(jobParameters.getString("s3AccessFile", s3AccessFile));
+    archivingProperties.setS3BucketName(jobParameters.getString("s3BucketName", s3BucketName));
+    archivingProperties.setS3KeyPrefix(jobParameters.getString("s3KeyPrefix", s3KeyPrefix));
+    archivingProperties.setS3Endpoint(jobParameters.getString("s3Endpoint", s3Endpoint));
+    archivingProperties.setHdfsEndpoint(jobParameters.getString("hdfsEndpoint", hdfsEndpoint));
+    archivingProperties.setHdfsDestinationDirectory(jobParameters.getString("hdfsDestinationDirectory", hdfsDestinationDirectory));
+    archivingProperties.setHdfsFilePermission(toFsPermission(jobParameters.getString("hdfsFilePermission", FsPermissionToStringConverter.toString(hdfsFilePermission))));
+    archivingProperties.setHdfsKerberosPrincipal(jobParameters.getString("hdfsKerberosPrincipal", hdfsKerberosPrincipal));
+    archivingProperties.setHdfsKerberosKeytabPath(jobParameters.getString("hdfsKerberosKeytabPath", hdfsKerberosKeytabPath));
+    archivingProperties.setSolr(solr.merge(jobParameters));
+    archivingProperties.setStart(jobParameters.getString("start"));
+    archivingProperties.setEnd(jobParameters.getString("end"));
+    archivingProperties.setTtl(toDuration(jobParameters.getString("ttl", DurationToStringConverter.toString(ttl))));
+    return archivingProperties;
+  }
+
+  private int getIntJobParameter(JobParameters jobParameters, String parameterName, int defaultValue) {
+    String valueText = jobParameters.getString(parameterName);
+    if (isBlank(valueText))
+      return defaultValue;
+    return Integer.parseInt(valueText);
   }
 }

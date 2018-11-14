@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MetricsIT {
-  private static final Logger LOG = LoggerFactory.getLogger(MetricsIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(MetricsIT.class);
 
   private static MockMetricsServer metricsServer;
   private static String shellScriptLocation;
@@ -49,7 +49,7 @@ public class MetricsIT {
 
     // TODO: use the same containers as ambari-infra-manager-it
     shellScriptLocation = ambariFolder + "/ambari-infra/ambari-infra-solr-plugin/docker/infra-solr-docker-compose.sh";
-    LOG.info("Creating new docker containers for testing Ambari Infra Solr Metrics plugin ...");
+    logger.info("Creating new docker containers for testing Ambari Infra Solr Metrics plugin ...");
     runCommand(new String[]{shellScriptLocation, "start"});
 
     Solr solr = new Solr("/usr/lib/ambari-infra-solr/server/solr");
@@ -62,7 +62,7 @@ public class MetricsIT {
 
   @AfterClass
   public static void tearDown() throws Exception {
-    LOG.info("shutdown containers");
+    logger.info("shutdown containers");
     runCommand(new String[]{shellScriptLocation, "stop"});
   }
 
@@ -74,10 +74,10 @@ public class MetricsIT {
       Thread.sleep(1000);
       if (currentTimeMillis() - start > 30 * 1000)
         break;
-      LOG.info("Checking any metrics arrived...");
+      logger.info("Checking any metrics arrived...");
     }
 
-    metricsServer.getNotReceivedMetrics().forEach(metric -> LOG.info("Metric not received: {}", metric));
+    metricsServer.getNotReceivedMetrics().forEach(metric -> logger.info("Metric not received: {}", metric));
     assertThat(metricsServer.getNotReceivedMetrics().isEmpty(), is(true));
   }
 

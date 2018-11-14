@@ -23,15 +23,22 @@ import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
 import java.time.Duration;
 
 import org.apache.ambari.infra.job.JobProperties;
+import org.apache.ambari.infra.job.Validatable;
 import org.apache.ambari.infra.json.DurationToStringConverter;
+import org.apache.ambari.infra.json.StringToDurationConverter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 @Configuration
 @ConfigurationProperties(prefix = "infra-manager.jobs.clean-up")
-public class CleanUpProperties extends JobProperties<CleanUpParameters> {
+public class CleanUpProperties extends JobProperties<CleanUpProperties> implements Validatable {
 
+  @JsonSerialize(converter = DurationToStringConverter.class)
+  @JsonDeserialize(converter = StringToDurationConverter.class)
   private Duration ttl;
 
   protected CleanUpProperties() {
@@ -47,9 +54,14 @@ public class CleanUpProperties extends JobProperties<CleanUpParameters> {
   }
 
   @Override
-  public CleanUpParameters merge(JobParameters jobParameters) {
-    CleanUpParameters cleanUpParameters = new CleanUpParameters();
-    cleanUpParameters.setTtl(toDuration(jobParameters.getString("ttl", DurationToStringConverter.toString(ttl))));
-    return cleanUpParameters;
+  public void validate() {
+
+  }
+
+  @Override
+  public CleanUpProperties merge(JobParameters jobParameters) {
+    CleanUpProperties cleanUpProperties = new CleanUpProperties();
+    cleanUpProperties.setTtl(toDuration(jobParameters.getString("ttl", DurationToStringConverter.toString(ttl))));
+    return cleanUpProperties;
   }
 }

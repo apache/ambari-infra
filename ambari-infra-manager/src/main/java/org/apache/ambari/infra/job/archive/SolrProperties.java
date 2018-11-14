@@ -18,6 +18,8 @@
  */
 package org.apache.ambari.infra.job.archive;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,13 +81,28 @@ public class SolrProperties {
     this.deleteQueryText = deleteQueryText;
   }
 
-  public SolrParameters merge(JobParameters jobParameters) {
-    SolrParameters solrParameters = new SolrParameters();
-    solrParameters.setZooKeeperConnectionString(jobParameters.getString("zooKeeperConnectionString", zooKeeperConnectionString));
-    solrParameters.setCollection(jobParameters.getString("collection", collection));
-    solrParameters.setQueryText(jobParameters.getString("queryText", queryText));
-    solrParameters.setFilterQueryText(jobParameters.getString("filterQueryText", filterQueryText));
-    solrParameters.setDeleteQueryText(jobParameters.getString("deleteQueryText", deleteQueryText));
+  public SolrQueryBuilder toQueryBuilder() {
+    return new SolrQueryBuilder().
+            setQueryText(queryText)
+            .setFilterQueryText(filterQueryText)
+            .addSort(sortColumn);
+  }
+
+  public void validate() {
+    if (isBlank(zooKeeperConnectionString))
+      throw new IllegalArgumentException("The property zooKeeperConnectionString can not be null or empty string!");
+
+    if (isBlank(collection))
+      throw new IllegalArgumentException("The property collection can not be null or empty string!");
+  }
+
+  public SolrProperties merge(JobParameters jobParameters) {
+    SolrProperties solrProperties = new SolrProperties();
+    solrProperties.setZooKeeperConnectionString(jobParameters.getString("zooKeeperConnectionString", zooKeeperConnectionString));
+    solrProperties.setCollection(jobParameters.getString("collection", collection));
+    solrProperties.setQueryText(jobParameters.getString("queryText", queryText));
+    solrProperties.setFilterQueryText(jobParameters.getString("filterQueryText", filterQueryText));
+    solrProperties.setDeleteQueryText(jobParameters.getString("deleteQueryText", deleteQueryText));
 
     String sortValue;
     List<String> sortColumns = new ArrayList<>();
@@ -95,12 +112,12 @@ public class SolrProperties {
       ++i;
     }
     if (!sortColumns.isEmpty()) {
-      solrParameters.setSortColumn(sortColumns.toArray(new String[0]));
+      solrProperties.setSortColumn(sortColumns.toArray(new String[0]));
     }
     else {
-      solrParameters.setSortColumn(sortColumn);
+      solrProperties.setSortColumn(sortColumn);
     }
 
-    return solrParameters;
+    return solrProperties;
   }
 }

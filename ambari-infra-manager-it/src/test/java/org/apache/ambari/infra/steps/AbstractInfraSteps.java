@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractInfraSteps {
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractInfraSteps.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractInfraSteps.class);
 
   private static final int INFRA_MANAGER_PORT = 61890;
   private static final int FAKE_S3_PORT = 4569;
@@ -85,12 +85,12 @@ public abstract class AbstractInfraSteps {
 
     String localDataFolder = getLocalDataFolder();
     if (new File(localDataFolder).exists()) {
-      LOG.info("Clean local data folder {}", localDataFolder);
+      logger.info("Clean local data folder {}", localDataFolder);
       FileUtils.cleanDirectory(new File(localDataFolder));
     }
 
     shellScriptLocation = ambariFolder + "/ambari-infra/ambari-infra-manager/docker/infra-manager-docker-compose.sh";
-    LOG.info("Create new docker container for testing Ambari Infra Manager ...");
+    logger.info("Create new docker container for testing Ambari Infra Manager ...");
     runCommand(new String[]{shellScriptLocation, "start"});
 
     dockerHost = getDockerHost();
@@ -101,7 +101,7 @@ public abstract class AbstractInfraSteps {
     solr.createSolrCollection(AUDIT_LOGS_COLLECTION);
     solr.createSolrCollection(HADOOP_LOGS_COLLECTION);
 
-    LOG.info("Initializing s3 client");
+    logger.info("Initializing s3 client");
     s3client = new S3Client(dockerHost, FAKE_S3_PORT, S3_BUCKET_NAME);
 
     checkInfraManagerReachable();
@@ -110,7 +110,7 @@ public abstract class AbstractInfraSteps {
   private void checkInfraManagerReachable() throws Exception {
     try (InfraClient httpClient = getInfraClient()) {
       doWithin(30, "Start Ambari Infra Manager", httpClient::getJobs);
-      LOG.info("Ambari Infra Manager is up and running");
+      logger.info("Ambari Infra Manager is up and running");
     }
   }
 
@@ -155,21 +155,21 @@ public abstract class AbstractInfraSteps {
   public void shutdownContainers() throws Exception {
     Thread.sleep(2000); // sync with s3 server
     List<String> objectKeys = getS3client().listObjectKeys();
-    LOG.info("Found {} files on s3.", objectKeys.size());
-    objectKeys.forEach(objectKey ->  LOG.info("Found file on s3 with key {}", objectKey));
+    logger.info("Found {} files on s3.", objectKeys.size());
+    objectKeys.forEach(objectKey ->  logger.info("Found file on s3 with key {}", objectKey));
 
-    LOG.info("Listing files on hdfs.");
+    logger.info("Listing files on hdfs.");
     try (FileSystem fileSystem = getHdfs()) {
       int count = 0;
       RemoteIterator<LocatedFileStatus> it = fileSystem.listFiles(new Path("/test_audit_logs"), true);
       while (it.hasNext()) {
-        LOG.info("Found file on hdfs with name {}", it.next().getPath().getName());
+        logger.info("Found file on hdfs with name {}", it.next().getPath().getName());
         ++count;
       }
-      LOG.info("{} files found on hfds", count);
+      logger.info("{} files found on hfds", count);
     }
 
-    LOG.info("shutdown containers");
+    logger.info("shutdown containers");
     runCommand(new String[]{shellScriptLocation, "stop"});
   }
 

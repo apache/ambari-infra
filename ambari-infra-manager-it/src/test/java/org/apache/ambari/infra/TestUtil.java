@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestUtil {
-  private static final Logger LOG = LoggerFactory.getLogger(TestUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestUtil.class);
 
   public static void doWithin(int sec, String actionName, BooleanSupplier predicate) {
     doWithin(sec, actionName, () -> {
@@ -54,7 +54,7 @@ public class TestUtil {
         throw new AssertionError(String.format("Unable to perform action '%s' within %d seconds", actionName, sec), exception);
       }
       else {
-        LOG.info("Performing action '{}' failed. retrying...", actionName);
+        logger.info("Performing action '{}' failed. retrying...", actionName);
       }
       try {
         Thread.sleep(1000);
@@ -71,10 +71,10 @@ public class TestUtil {
 
   public static void runCommand(String[] command) {
     try {
-      LOG.info("Exec command: {}", StringUtils.join(command, " "));
+      logger.info("Exec command: {}", StringUtils.join(command, " "));
       Process process = Runtime.getRuntime().exec(command);
       String stdout = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
-      LOG.info("Exec command result {}", stdout);
+      logger.info("Exec command result {}", stdout);
     } catch (Exception e) {
       throw new RuntimeException("Error during execute shell command: ", e);
     }
