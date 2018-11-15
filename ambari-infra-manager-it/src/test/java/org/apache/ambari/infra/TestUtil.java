@@ -25,11 +25,11 @@ import java.util.function.BooleanSupplier;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TestUtil {
-  private static final Logger logger = LoggerFactory.getLogger(TestUtil.class);
+  private static final Logger logger = LogManager.getLogger(TestUtil.class);
 
   public static void doWithin(int sec, String actionName, BooleanSupplier predicate) {
     doWithin(sec, actionName, () -> {

@@ -27,8 +27,8 @@ import static spark.Spark.post;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 
@@ -37,7 +37,7 @@ import spark.Response;
 import spark.servlet.SparkApplication;
 
 public class MockMetricsServer implements SparkApplication {
-  private static final Logger logger = LoggerFactory.getLogger(MockMetricsServer.class);
+  private static final Logger logger = LogManager.getLogger(MockMetricsServer.class);
   private static final String HOST_NAME = "metrics_collector";
 
   private Set<String> expectedMetrics;

@@ -30,14 +30,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.ambari.infra.Solr;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MetricsIT {
-  private static final Logger logger = LoggerFactory.getLogger(MetricsIT.class);
+  private static final Logger logger = LogManager.getLogger(MetricsIT.class);
 
   private static MockMetricsServer metricsServer;
   private static String shellScriptLocation;
@@ -61,7 +61,7 @@ public class MetricsIT {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     logger.info("shutdown containers");
     runCommand(new String[]{shellScriptLocation, "stop"});
   }

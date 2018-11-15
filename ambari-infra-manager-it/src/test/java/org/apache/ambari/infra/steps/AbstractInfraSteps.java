@@ -40,14 +40,14 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.solr.common.SolrInputDocument;
 import org.jbehave.core.annotations.AfterStories;
 import org.jbehave.core.annotations.BeforeStories;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractInfraSteps {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractInfraSteps.class);
+  private static final Logger logger = LogManager.getLogger(AbstractInfraSteps.class);
 
   private static final int INFRA_MANAGER_PORT = 61890;
   private static final int FAKE_S3_PORT = 4569;
