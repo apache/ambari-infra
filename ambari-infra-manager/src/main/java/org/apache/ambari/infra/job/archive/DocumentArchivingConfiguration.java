@@ -32,7 +32,6 @@ import org.apache.ambari.infra.job.AbstractJobsConfiguration;
 import org.apache.ambari.infra.job.JobContextRepository;
 import org.apache.ambari.infra.job.JobScheduler;
 import org.apache.ambari.infra.job.ObjectSource;
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -103,8 +102,8 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Do
         break;
       case HDFS:
         org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
-        conf.set("fs.defaultFS", parameters.getHdfsEndpoint());
-        fileAction.add(new HdfsUploader(conf, new Path(parameters.getHdfsDestinationDirectory()), parameters.getHdfsFilePermission()));
+        fileAction.add(new HdfsUploader(conf,
+                parameters.hdfsProperties().orElseThrow(() -> new IllegalStateException("HDFS properties are not provided!"))));
         break;
       case LOCAL:
         baseDir = new File(parameters.getLocalDestinationDirectory());

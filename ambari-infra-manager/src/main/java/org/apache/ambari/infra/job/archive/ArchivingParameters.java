@@ -54,6 +54,8 @@ public class ArchivingParameters implements Validatable {
   @JsonSerialize(converter = FsPermissionToStringConverter.class)
   @JsonDeserialize(converter = StringToFsPermissionConverter.class)
   private FsPermission hdfsFilePermission;
+  private String hdfsKerberosPrincipal;
+  private String hdfsKerberosKeytabPath;
   private String start;
   private String end;
   @JsonSerialize(converter = DurationToStringConverter.class)
@@ -172,6 +174,22 @@ public class ArchivingParameters implements Validatable {
     this.hdfsFilePermission = hdfsFilePermission;
   }
 
+  public String getHdfsKerberosPrincipal() {
+    return hdfsKerberosPrincipal;
+  }
+
+  public void setHdfsKerberosPrincipal(String hdfsKerberosPrincipal) {
+    this.hdfsKerberosPrincipal = hdfsKerberosPrincipal;
+  }
+
+  public String getHdfsKerberosKeytabPath() {
+    return hdfsKerberosKeytabPath;
+  }
+
+  public void setHdfsKerberosKeytabPath(String hdfsKerberosKeytabPath) {
+    this.hdfsKerberosKeytabPath = hdfsKerberosKeytabPath;
+  }
+
   public Optional<S3Properties> s3Properties() {
     if (isBlank(s3BucketName))
       return Optional.empty();
@@ -181,6 +199,18 @@ public class ArchivingParameters implements Validatable {
             s3KeyPrefix,
             s3BucketName,
             s3Endpoint));
+  }
+
+  public Optional<HdfsProperties> hdfsProperties() {
+    if (isBlank(hdfsDestinationDirectory))
+      return Optional.empty();
+
+    return Optional.of(new HdfsProperties(
+            hdfsEndpoint,
+            hdfsDestinationDirectory,
+            hdfsFilePermission,
+            hdfsKerberosPrincipal,
+            hdfsKerberosKeytabPath));
   }
 
   public String getStart() {
@@ -234,12 +264,9 @@ public class ArchivingParameters implements Validatable {
         break;
 
       case HDFS:
-        if (isBlank(hdfsEndpoint))
-          throw new IllegalArgumentException(String.format(
-                  "The property hdfsEndpoint can not be null or empty string when destination is set to %s!", HDFS.name()));
-        if (isBlank(hdfsDestinationDirectory))
-          throw new IllegalArgumentException(String.format(
-                  "The property hdfsDestinationDirectory can not be null or empty string when destination is set to %s!", HDFS.name()));
+        hdfsProperties()
+                .orElseThrow(() -> new IllegalArgumentException("HDFS related properties must be set if the destination is " + HDFS.name()))
+                .validate();
     }
 
     requireNonNull(solr, "No solr query was specified for archiving job!");
