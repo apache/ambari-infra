@@ -18,11 +18,7 @@
  */
 package org.apache.ambari.infra.job.archive;
 
-import org.apache.ambari.infra.conf.security.PasswordStore;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.commons.csv.CSVFormat.DEFAULT;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -34,10 +30,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.apache.commons.csv.CSVFormat.DEFAULT;
+import org.apache.ambari.infra.conf.security.PasswordStore;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class S3AccessCsv implements PasswordStore {
-  private static final Logger LOG = LoggerFactory.getLogger(S3AccessCsv.class);
+  private static final Logger logger = LogManager.getLogger(S3AccessCsv.class);
 
   public static S3AccessCsv file(String path) {
     try {
@@ -77,7 +77,7 @@ public class S3AccessCsv implements PasswordStore {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     } catch (S3AccessCsvFormatException e) {
-      LOG.warn("Unable to parse csv file: {}", e.getMessage());
+      logger.warn("Unable to parse csv file: {}", e.getMessage());
     }
   }
 

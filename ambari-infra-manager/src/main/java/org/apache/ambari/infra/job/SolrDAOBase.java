@@ -25,14 +25,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.zookeeper.client.ConnectStringParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class SolrDAOBase {
-  private static final Logger LOG = LoggerFactory.getLogger(SolrDAOBase.class);
+  private static final Logger logger = LogManager.getLogger(SolrDAOBase.class);
 
   private final String zooKeeperConnectionString;
   private final String defaultCollection;
@@ -45,14 +45,14 @@ public abstract class SolrDAOBase {
   protected void delete(String deleteQueryText) {
     try (CloudSolrClient client = createClient()) {
       try {
-        LOG.info("Executing solr delete by query {}", deleteQueryText);
+        logger.info("Executing solr delete by query {}", deleteQueryText);
         client.deleteByQuery(deleteQueryText);
         client.commit();
       } catch (Exception e) {
         try {
           client.rollback();
         } catch (SolrServerException e1) {
-          LOG.warn("Unable to rollback after solr delete operation failure.", e1);
+          logger.warn("Unable to rollback after solr delete operation failure.", e1);
         }
         throw new RuntimeException(e);
       }

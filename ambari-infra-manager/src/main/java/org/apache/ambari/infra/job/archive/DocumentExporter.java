@@ -19,8 +19,8 @@
 package org.apache.ambari.infra.job.archive;
 
 import org.apache.ambari.infra.job.JobContextRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
@@ -34,7 +34,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 
 public class DocumentExporter implements Tasklet, StepExecutionListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DocumentExporter.class);
+  private static final Logger logger = LogManager.getLogger(DocumentExporter.class);
 
   private boolean complete = false;
   private final ItemStreamReader<Document> documentReader;
@@ -78,7 +78,7 @@ public class DocumentExporter implements Tasklet, StepExecutionListener {
         if (writer != null && writtenCount >= writeBlockSize) {
           stepExecution = jobContextRepository.getStepExecution(stepExecution.getJobExecutionId(), stepExecution.getId());
           if (stepExecution.getJobExecution().getStatus() == BatchStatus.STOPPING) {
-            LOG.info("Received stop signal.");
+            logger.info("Received stop signal.");
             writer.revert();
             writer = null;
             return RepeatStatus.CONTINUABLE;

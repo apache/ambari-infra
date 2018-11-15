@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class DocumentDeletingConfiguration extends AbstractJobsConfiguration<DocumentDeletingProperties, DeletingParameters> {
+public class DocumentDeletingConfiguration extends AbstractJobsConfiguration<DeletingProperties, DeletingProperties> {
 
   private final StepBuilderFactory steps;
   private final Step deleteStep;
@@ -72,7 +72,7 @@ public class DocumentDeletingConfiguration extends AbstractJobsConfiguration<Doc
   @Bean
   @StepScope
   public DocumentWiperTasklet documentWiperTasklet(
-          @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") DeletingParameters parameters) {
+          @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") DeletingProperties parameters) {
     return new DocumentWiperTasklet(parameters);
   }
 }

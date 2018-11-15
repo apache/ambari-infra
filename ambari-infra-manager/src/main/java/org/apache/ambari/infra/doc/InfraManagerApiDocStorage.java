@@ -25,8 +25,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
@@ -36,7 +36,7 @@ import io.swagger.util.Yaml;
 @Named
 public class InfraManagerApiDocStorage {
 
-  private static final Logger LOG = LoggerFactory.getLogger(InfraManagerApiDocStorage.class);
+  private static final Logger logger = LogManager.getLogger(InfraManagerApiDocStorage.class);
 
   private final Map<String, Object> swaggerMap = new ConcurrentHashMap<>();
 
@@ -48,7 +48,7 @@ public class InfraManagerApiDocStorage {
     Thread loadApiDocThread = new Thread("load_swagger_api_doc") {
       @Override
       public void run() {
-        LOG.info("Start thread to scan REST API doc from endpoints.");
+        logger.info("Start thread to scan REST API doc from endpoints.");
         Swagger swagger = beanConfig.getSwagger();
         swagger.addSecurityDefinition("basicAuth", new BasicAuthDefinition());
         beanConfig.configure(swagger);
@@ -66,7 +66,7 @@ public class InfraManagerApiDocStorage {
         } catch (Exception e) {
           e.printStackTrace();
         }
-        LOG.info("Scanning REST API endpoints and generating docs has been successful.");
+        logger.info("Scanning REST API endpoints and generating docs has been successful.");
       }
     };
     loadApiDocThread.setDaemon(true);

@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 public class FileNameSuffixFormatter {
   public static final DateTimeFormatter SOLR_DATETIME_FORMATTER = DateTimeFormatter.ofPattern(SOLR_DATE_FORMAT_TEXT);
 
-  public static FileNameSuffixFormatter from(ArchivingParameters properties) {
+  public static FileNameSuffixFormatter from(ArchivingProperties properties) {
     return new FileNameSuffixFormatter(properties.getFileNameSuffixColumn(), properties.getFileNameSuffixDateFormat());
   }
 

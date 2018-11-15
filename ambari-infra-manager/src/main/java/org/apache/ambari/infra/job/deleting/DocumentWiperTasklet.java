@@ -28,11 +28,11 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 
 public class DocumentWiperTasklet extends SolrDAOBase implements Tasklet {
-  private final DeletingParameters parameters;
+  private final DeletingProperties parameters;
 
-  public DocumentWiperTasklet(DeletingParameters deletingParameters) {
-    super(deletingParameters.getZooKeeperConnectionString(), deletingParameters.getCollection());
-    parameters = deletingParameters;
+  public DocumentWiperTasklet(DeletingProperties deletingProperties) {
+    super(deletingProperties.getZooKeeperConnectionString(), deletingProperties.getCollection());
+    parameters = deletingProperties;
   }
 
   @Override

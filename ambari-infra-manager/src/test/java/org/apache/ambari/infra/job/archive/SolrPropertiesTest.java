@@ -36,7 +36,7 @@ public class  SolrPropertiesTest {
 
     SolrProperties solrProperties = new SolrProperties();
     solrProperties.setSortColumn(new String[] {"testColumn"});
-    SolrParameters solrParameters = solrProperties.merge(jobParameters);
+    SolrProperties solrParameters = solrProperties.merge(jobParameters);
     assertThat(solrParameters.getSortColumn().length, is(2));
     assertThat(solrParameters.getSortColumn()[0], is("logtime"));
     assertThat(solrParameters.getSortColumn()[1], is("id"));
@@ -48,7 +48,7 @@ public class  SolrPropertiesTest {
             .toJobParameters();
 
     SolrProperties solrProperties = new SolrProperties();
-    SolrParameters solrParameters = solrProperties.merge(jobParameters);
+    SolrProperties solrParameters = solrProperties.merge(jobParameters);
     assertThat(solrParameters.getSortColumn(), is(nullValue()));
   }
 
@@ -59,7 +59,7 @@ public class  SolrPropertiesTest {
 
     SolrProperties solrProperties = new SolrProperties();
     solrProperties.setSortColumn(new String[] {"testColumn"});
-    SolrParameters solrParameters = solrProperties.merge(jobParameters);
+    SolrProperties solrParameters = solrProperties.merge(jobParameters);
     assertThat(solrParameters.getSortColumn().length, is(1));
     assertThat(solrParameters.getSortColumn()[0], is("testColumn"));
   }

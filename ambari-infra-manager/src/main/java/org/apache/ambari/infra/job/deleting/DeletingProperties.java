@@ -18,18 +18,21 @@
  */
 package org.apache.ambari.infra.job.deleting;
 
+import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.time.Duration;
 
+import org.apache.ambari.infra.job.JobProperties;
 import org.apache.ambari.infra.job.Validatable;
 import org.apache.ambari.infra.json.DurationToStringConverter;
 import org.apache.ambari.infra.json.StringToDurationConverter;
+import org.springframework.batch.core.JobParameters;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-public class DeletingParameters implements Validatable {
+public class DeletingProperties extends JobProperties<DeletingProperties> implements Validatable {
   private String zooKeeperConnectionString;
   private String collection;
   private String filterField;
@@ -97,5 +100,17 @@ public class DeletingParameters implements Validatable {
 
     if (isBlank(filterField))
       throw new IllegalArgumentException("The property filterField can not be null or empty string!");
+  }
+
+  @Override
+  public DeletingProperties merge(JobParameters jobParameters) {
+    DeletingProperties deletingProperties = new DeletingProperties();
+    deletingProperties.setZooKeeperConnectionString(jobParameters.getString("zooKeeperConnectionString", zooKeeperConnectionString));
+    deletingProperties.setCollection(jobParameters.getString("collection", collection));
+    deletingProperties.setFilterField(jobParameters.getString("filterField", filterField));
+    deletingProperties.setStart(jobParameters.getString("start", "*"));
+    deletingProperties.setEnd(jobParameters.getString("end", "*"));
+    deletingProperties.setTtl(toDuration(jobParameters.getString("ttl", DurationToStringConverter.toString(ttl))));
+    return deletingProperties;
   }
 }

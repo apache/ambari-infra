@@ -73,7 +73,7 @@ public class CleanUpConfiguration {
   @StepScope
   protected TaskHistoryWiper taskHistoryWiper(
           InfraJobExecutionDao infraJobExecutionDao,
-          @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") CleanUpParameters cleanUpParameters) {
-    return new TaskHistoryWiper(infraJobExecutionDao, cleanUpParameters.getTtl());
+          @Value("#{stepExecution.jobExecution.executionContext.get('" + PARAMETERS_CONTEXT_KEY + "')}") CleanUpProperties cleanUpProperties) {
+    return new TaskHistoryWiper(infraJobExecutionDao, cleanUpProperties.getTtl());
   }
 }

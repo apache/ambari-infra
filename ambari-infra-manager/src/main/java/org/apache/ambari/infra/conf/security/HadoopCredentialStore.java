@@ -18,16 +18,16 @@
  */
 package org.apache.ambari.infra.conf.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
-
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class HadoopCredentialStore implements PasswordStore {
-  private static final Logger LOG = LoggerFactory.getLogger(InfraManagerSecurityConfig.class);
+  private static final Logger logger = LogManager.getLogger(InfraManagerSecurityConfig.class);
   public static final String CREDENTIAL_STORE_PROVIDER_PATH_PROPERTY = "hadoop.security.credential.provider.path";
 
   private final String credentialStoreProviderPath;
@@ -48,7 +48,7 @@ public class HadoopCredentialStore implements PasswordStore {
       char[] passwordChars = config.getPassword(propertyName);
       return (isNotEmpty(passwordChars)) ? Optional.of(new String(passwordChars)) : Optional.empty();
     } catch (Exception e) {
-      LOG.warn("Could not load password {} from credential store.", propertyName);
+      logger.warn("Could not load password {} from credential store.", propertyName);
       return Optional.empty();
     }
   }

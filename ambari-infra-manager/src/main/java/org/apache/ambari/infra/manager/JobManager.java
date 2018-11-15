@@ -40,8 +40,8 @@ import org.apache.ambari.infra.model.JobOperationParams;
 import org.apache.ambari.infra.model.StepExecutionContextResponse;
 import org.apache.ambari.infra.model.StepExecutionInfoResponse;
 import org.apache.ambari.infra.model.StepExecutionProgressResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.batch.admin.history.StepExecutionHistory;
 import org.springframework.batch.admin.service.JobService;
 import org.springframework.batch.admin.service.NoSuchStepExecutionException;
@@ -67,7 +67,7 @@ import com.google.common.collect.Lists;
 @Named
 public class JobManager implements Jobs {
 
-  private static final Logger LOG = LoggerFactory.getLogger(JobManager.class);
+  private static final Logger logger = LogManager.getLogger(JobManager.class);
 
   @Inject
   private JobService jobService;
@@ -117,7 +117,7 @@ public class JobManager implements Jobs {
     try {
       jobService.stop(jobExecutionId);
     } catch (JobExecutionNotRunningException e) {
-      LOG.warn(String.format("Job is not running jobExecutionId=%d", jobExecutionId), e.getMessage());
+      logger.warn(String.format("Job is not running jobExecutionId=%d", jobExecutionId), e.getMessage());
     }
     jobService.abandon(jobExecutionId);
   }
@@ -162,7 +162,7 @@ public class JobManager implements Jobs {
     } else {
       throw new UnsupportedOperationException("Unsupported operaration");
     }
-    LOG.info("Job {} was marked {}", jobExecution.getJobInstance().getJobName(), operation.name());
+    logger.info("Job {} was marked {}", jobExecution.getJobInstance().getJobName(), operation.name());
     return new JobExecutionInfoResponse(jobExecution, timeZone);
   }
 

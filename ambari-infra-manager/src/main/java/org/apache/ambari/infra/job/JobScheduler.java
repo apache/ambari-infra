@@ -24,8 +24,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.ambari.infra.manager.Jobs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -40,7 +40,7 @@ import org.springframework.scheduling.support.CronTrigger;
 
 @Named
 public class JobScheduler {
-  private static final Logger LOG = LoggerFactory.getLogger(JobScheduler.class);
+  private static final Logger logger = LogManager.getLogger(JobScheduler.class);
 
   private final TaskScheduler scheduler;
   private final Jobs jobs;
@@ -59,7 +59,7 @@ public class JobScheduler {
     }
 
     scheduler.schedule(() -> launchJob(jobName), new CronTrigger(schedulingProperties.getCron()));
-    LOG.info("Job {} scheduled for running. Cron: {}", jobName, schedulingProperties.getCron());
+    logger.info("Job {} scheduled for running. Cron: {}", jobName, schedulingProperties.getCron());
   }
 
   private void restartIfFailed(JobExecution jobExecution) {

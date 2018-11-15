@@ -39,8 +39,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -49,7 +49,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 // TODO: use swagger
 public class InfraClient implements AutoCloseable {
-  private static final Logger LOG = LoggerFactory.getLogger(InfraClient.class);
+  private static final Logger logger = LogManager.getLogger(InfraClient.class);
 
   private final CloseableHttpClient httpClient;
   private final URI baseUrl;
@@ -77,7 +77,7 @@ public class InfraClient implements AutoCloseable {
     try (CloseableHttpResponse response = httpClient.execute(post)) {
       String responseBodyText = IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset());
       int statusCode = response.getStatusLine().getStatusCode();
-      LOG.info("Response code {} body {} ", statusCode, responseBodyText);
+      logger.info("Response code {} body {} ", statusCode, responseBodyText);
       if (!(200 <= statusCode && statusCode <= 299))
         throw new RuntimeException("Error while executing http request: " + responseBodyText);
       return new HttpResponse(statusCode, responseBodyText);

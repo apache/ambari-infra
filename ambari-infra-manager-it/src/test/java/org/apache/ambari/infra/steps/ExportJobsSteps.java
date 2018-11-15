@@ -49,18 +49,18 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ExportJobsSteps extends AbstractInfraSteps {
-  private static final Logger LOG = LoggerFactory.getLogger(ExportJobsSteps.class);
+  private static final Logger logger = LogManager.getLogger(ExportJobsSteps.class);
   private Set<String> documentIds = new HashSet<>();
 
   private Map<String, JobExecutionInfo> launchedJobs = new HashMap<>();
@@ -101,7 +101,7 @@ public class ExportJobsSteps extends AbstractInfraSteps {
     Thread.sleep(waitSec * 1000);
     try (InfraClient httpClient = getInfraClient()) {
       JobExecutionInfo jobExecutionInfo = httpClient.startJob(jobName, parameters);
-      LOG.info("Job {} started: {}", jobName, jobExecutionInfo);
+      logger.info("Job {} started: {}", jobName, jobExecutionInfo);
       launchedJobs.put(jobName, jobExecutionInfo);
     }
   }
@@ -208,7 +208,7 @@ public class ExportJobsSteps extends AbstractInfraSteps {
   @Then("Check $count files exists on local filesystem with filenames containing the text $text in the folder $path for job $jobName")
   public void checkNumberOfFilesOnLocalFilesystem(long count, String text, String path, String jobName) {
     File destinationDirectory = new File(getLocalDataFolder(), path.replace("${jobId}", launchedJobs.get(jobName).getJobId()));
-    LOG.info("Destination directory path: {}", destinationDirectory.getAbsolutePath());
+    logger.info("Destination directory path: {}", destinationDirectory.getAbsolutePath());
     doWithin(5, "Destination directory exists", destinationDirectory::exists);
 
     File[] files = requireNonNull(destinationDirectory.listFiles(),

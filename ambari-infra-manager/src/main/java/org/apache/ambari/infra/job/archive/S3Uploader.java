@@ -11,8 +11,8 @@ import java.security.NoSuchAlgorithmException;
 
 import org.apache.ambari.infra.conf.security.CompositePasswordStore;
 import org.apache.ambari.infra.conf.security.PasswordStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
@@ -46,14 +46,14 @@ import io.minio.errors.RegionConflictException;
  */
 public class S3Uploader extends AbstractFileAction {
 
-  private static final Logger LOG = LoggerFactory.getLogger(S3Uploader.class);
+  private static final Logger logger = LogManager.getLogger(S3Uploader.class);
 
   private final MinioClient client;
   private final String keyPrefix;
   private final String bucketName;
 
   public S3Uploader(S3Properties s3Properties, PasswordStore passwordStore) {
-    LOG.info("Initializing S3 client with " + s3Properties);
+    logger.info("Initializing S3 client with " + s3Properties);
 
     this.keyPrefix = s3Properties.getS3KeyPrefix();
     this.bucketName = s3Properties.getS3BucketName();

@@ -22,8 +22,8 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 
 import org.apache.ambari.infra.job.InfraJobExecutionDao;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -31,7 +31,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 
 public class TaskHistoryWiper implements Tasklet {
 
-  private static final Logger logger = LoggerFactory.getLogger(TaskHistoryWiper.class);
+  private static final Logger logger = LogManager.getLogger(TaskHistoryWiper.class);
   public static final Duration DEFAULT_TTL = Duration.ofHours(1);
 
   private final InfraJobExecutionDao infraJobExecutionDao;

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 public class AmbariSolrCloudCLI {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AmbariSolrCloudCLI.class);
+  private static final Logger logger = LoggerFactory.getLogger(AmbariSolrCloudCLI.class);
 
   private static final int ZK_CLIENT_TIMEOUT = 60000; // 1 minute
   private static final int ZK_CLIENT_CONNECT_TIMEOUT = 60000; // 1 minute
@@ -700,9 +700,9 @@ public class AmbariSolrCloudCLI {
 
   private static void exit(int exitCode, String message) {
     if (message != null){
-      LOG.error(message);
+      logger.error(message);
     }
-    LOG.info("Return code: {}", exitCode);
+    logger.info("Return code: {}", exitCode);
     System.exit(exitCode);
   }
 }
