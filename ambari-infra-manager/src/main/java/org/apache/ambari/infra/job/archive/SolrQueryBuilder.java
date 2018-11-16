@@ -25,6 +25,7 @@ import static org.apache.solr.client.solrj.SolrQuery.ORDER.asc;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 public class SolrQueryBuilder {
 
   public static String computeEnd(String end, Duration ttl) {
-    return computeEnd(end, OffsetDateTime.now(), ttl);
+    return computeEnd(end, OffsetDateTime.now(ZoneOffset.UTC), ttl);
   }
 
   public static String computeEnd(String end, OffsetDateTime now, Duration ttl) {
