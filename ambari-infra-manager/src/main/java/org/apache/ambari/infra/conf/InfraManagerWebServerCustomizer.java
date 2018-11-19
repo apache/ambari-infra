@@ -18,13 +18,17 @@
  */
 package org.apache.ambari.infra.conf;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.time.Duration;
 
 import javax.inject.Inject;
 
+import org.apache.ambari.infra.conf.security.SslSecrets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
+import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.stereotype.Component;
 
@@ -34,18 +38,47 @@ public class InfraManagerWebServerCustomizer implements WebServerFactoryCustomiz
   @Value("${infra-manager.server.port:61890}")
   private int port;
 
+  @Value("${infra-manager.server.ssl.enabled:false}")
+  private boolean sslEnabled;
+
   @Inject
   private ServerProperties serverProperties;
 
+  @Inject
+  private SslSecrets sslSecrets;
+
   private static final Integer SESSION_TIMEOUT = 60 * 30;
-  private static final String INFRA_MANAGER_SESSIONID = "INFRAMANAGER_SESSIONID";
+  private static final String INFRA_MANAGER_SESSION_ID = "INFRAMANAGER_SESSIONID";
   private static final String INFRA_MANAGER_APPLICATION_NAME = "infra-manager";
 
   @Override
   public void customize(JettyServletWebServerFactory factory) {
     factory.setPort(port);
     factory.setDisplayName(INFRA_MANAGER_APPLICATION_NAME);
-    factory.getSession().getCookie().setName(INFRA_MANAGER_SESSIONID);
+    factory.getSession().getCookie().setName(INFRA_MANAGER_SESSION_ID);
     factory.getSession().setTimeout(Duration.ofSeconds(SESSION_TIMEOUT));
+
+    Ssl ssl = new Ssl();
+    String keyStore = System.getProperty("javax.net.ssl.keyStore");
+    if (isNotBlank(keyStore)) {
+      ssl.setKeyStore(keyStore);
+      ssl.setKeyStoreType(System.getProperty("javax.net.ssl.keyStoreType"));
+      String keyStorePassword = sslSecrets.getKeyStorePassword().get().orElseThrow(() -> new IllegalStateException("Password for keystore is not set!"));
+      ssl.setKeyStorePassword(keyStorePassword);
+      System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
+    }
+
+    String trustStore = System.getProperty("javax.net.ssl.trustStore");
+    if (isNotBlank(trustStore)) {
+      ssl.setTrustStore(trustStore);
+      ssl.setTrustStoreType(System.getProperty("javax.net.ssl.trustStoreType"));
+      String trustStorePassword = sslSecrets.getTrustStorePassword().get().orElseThrow(() -> new IllegalStateException("Password for truststore is not set!"));
+      ssl.setKeyStorePassword(trustStorePassword);
+      System.setProperty("javax.net.ssl.trustStorePassword", trustStorePassword);
+    }
+
+    ssl.setEnabled(sslEnabled);
+
+    factory.setSsl(ssl);
   }
 }

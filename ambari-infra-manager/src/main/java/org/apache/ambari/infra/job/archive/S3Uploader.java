@@ -9,8 +9,9 @@ import java.io.UncheckedIOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-import org.apache.ambari.infra.conf.security.CompositePasswordStore;
-import org.apache.ambari.infra.conf.security.PasswordStore;
+import org.apache.ambari.infra.conf.security.CompositeSecret;
+import org.apache.ambari.infra.conf.security.S3Secrets;
+import org.apache.ambari.infra.conf.security.Secret;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.xmlpull.v1.XmlPullParserException;
@@ -51,22 +52,28 @@ public class S3Uploader extends AbstractFileAction {
   private final MinioClient client;
   private final String keyPrefix;
   private final String bucketName;
+  private final Secret s3AccessKey;
+  private final Secret s3SecretKey;
 
-  public S3Uploader(S3Properties s3Properties, PasswordStore passwordStore) {
+  public S3Uploader(S3Properties s3Properties, S3Secrets s3Secrets) {
     logger.info("Initializing S3 client with " + s3Properties);
 
     this.keyPrefix = s3Properties.getS3KeyPrefix();
     this.bucketName = s3Properties.getS3BucketName();
 
-    PasswordStore compositePasswordStore = passwordStore;
-    if (isNotBlank((s3Properties.getS3AccessFile())))
-      compositePasswordStore = new CompositePasswordStore(passwordStore, S3AccessCsv.file(s3Properties.getS3AccessFile()));
+    if (isNotBlank(s3Properties.getS3AccessFile())) {
+      this.s3AccessKey = new CompositeSecret(s3Secrets.getS3AccessKeyId(), S3AccessCsv.file(s3Properties.getS3AccessFile(), "Access key ID"));
+      this.s3SecretKey = new CompositeSecret(s3Secrets.getS3SecretAccessKey(), S3AccessCsv.file(s3Properties.getS3AccessFile(), "Secret access key"));
+    }
+    else {
+      this.s3AccessKey = s3Secrets.getS3AccessKeyId();
+      this.s3SecretKey = s3Secrets.getS3SecretAccessKey();
+    }
 
     try {
-      client = new MinioClient(s3Properties.getS3EndPoint(), compositePasswordStore.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName())
-              .orElseThrow(() -> new IllegalArgumentException("Access key Id is not present!")),
-              compositePasswordStore.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName())
-                      .orElseThrow(() -> new IllegalArgumentException("Secret Access Key is not present!")));
+      client = new MinioClient(s3Properties.getS3EndPoint(),
+              s3AccessKey.get().orElseThrow(() -> new IllegalArgumentException("Access key Id is not present!")),
+              s3SecretKey.get().orElseThrow(() -> new IllegalArgumentException("Secret Access Key is not present!")));
 
       if (!client.bucketExists(bucketName))
         client.makeBucket(bucketName);

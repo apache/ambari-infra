@@ -18,22 +18,20 @@
  */
 package org.apache.ambari.infra.conf.security;
 
-import java.util.Optional;
+public class SslSecrets {
+  private final Secret keyStorePassword;
+  private final Secret trustStorePassword;
 
-public class CompositePasswordStore implements PasswordStore {
-  private PasswordStore[] passwordStores;
-
-  public CompositePasswordStore(PasswordStore... passwordStores) {
-    this.passwordStores = passwordStores;
+  public SslSecrets(Secret keyStorePassword, Secret trustStorePassword) {
+    this.keyStorePassword = keyStorePassword;
+    this.trustStorePassword = trustStorePassword;
   }
 
-  @Override
-  public Optional<String> getPassword(String propertyName) {
-    for (PasswordStore passwordStore : passwordStores) {
-      Optional<String> optionalPassword = passwordStore.getPassword(propertyName);
-      if (optionalPassword.isPresent())
-        return optionalPassword;
-    }
-    return Optional.empty();
+  public Secret getKeyStorePassword() {
+    return keyStorePassword;
+  }
+
+  public Secret getTrustStorePassword() {
+    return trustStorePassword;
   }
 }

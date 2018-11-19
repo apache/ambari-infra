@@ -1,11 +1,12 @@
 package org.apache.ambari.infra.job.archive;
 
-import org.junit.Test;
+import static org.apache.ambari.infra.job.archive.S3AccessCsv.ACCESS_KEY_ID;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.StringReader;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import org.junit.Test;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -33,38 +34,33 @@ public class S3AccessCsvTest {
   private static final String ANY_CSV_FILE = "Column1,Column2\n" +
           "Foo,Bar\n";
 
-  @Test
+  @Test(expected = S3AccessCsvFormatException.class)
   public void testGetPasswordReturnsNullIfInputIsEmpty() {
-    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader(""));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName()).isPresent(), is(false));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName()).isPresent(), is(false));
+    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader(""), ACCESS_KEY_ID);
+    assertThat(accessCsv.get().isPresent(), is(false));
   }
 
   @Test
   public void testGetPasswordReturnsAccessAndSecretKeyIfInputIsAValidS3AccessFile() {
-    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader(VALID_ACCESS_FILE));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName()).get(), is("someKey"));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName()).get(), is("someSecret"));
+    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader(VALID_ACCESS_FILE), ACCESS_KEY_ID);
+    assertThat(accessCsv.get().get(), is("someKey"));
   }
 
-  @Test
-  public void testGetPasswordReturnsNullIfNotAValidS3AccessFileProvided() {
-    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader(ANY_CSV_FILE));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName()).isPresent(), is(false));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName()).isPresent(), is(false));
+  @Test(expected = S3AccessCsvFormatException.class)
+  public void testGetPasswordThrowsExceptionIfNotAValidS3AccessFileProvided() {
+    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader(ANY_CSV_FILE), ACCESS_KEY_ID);
+    assertThat(accessCsv.get().isPresent(), is(false));
   }
 
-  @Test
-  public void testGetPasswordReturnsNullIfAHeaderOnlyS3AccessFileProvided() {
-    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader("Access key ID,Secret access key\n"));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName()).isPresent(), is(false));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName()).isPresent(), is(false));
+  @Test(expected = S3AccessCsvFormatException.class)
+  public void testGetPasswordThrowsExceptionIfAHeaderOnlyS3AccessFileProvided() {
+    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader("Access key ID,Secret access key\n"), ACCESS_KEY_ID);
+    assertThat(accessCsv.get().isPresent(), is(false));
   }
 
-  @Test
-  public void testGetPasswordReturnsNullIfOnlyOneValidColumnProvided() {
-    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader("Access key ID,Column\n"));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.AccessKeyId.getEnvVariableName()).isPresent(), is(false));
-    assertThat(accessCsv.getPassword(S3AccessKeyNames.SecretAccessKey.getEnvVariableName()).isPresent(), is(false));
+  @Test(expected = S3AccessCsvFormatException.class)
+  public void testGetPasswordThrowsExceptionIfOnlyOneValidColumnProvided() {
+    S3AccessCsv accessCsv = new S3AccessCsv(new StringReader("Access key ID,Column\n"), ACCESS_KEY_ID);
+    assertThat(accessCsv.get().isPresent(), is(false));
   }
 }

@@ -101,8 +101,8 @@ function create_collection() {
   pushd $sdir/../
   local AMBARI_SOLR_MANAGER_LOCATION=$(pwd)
   cd $AMBARI_SOLR_MANAGER_LOCATION/docker
-  docker exec docker_solr_1 solr create_collection -force -c hadoop_logs -d /usr/lib/ambari-infra-solr/server/solr/configsets/hadoop_logs/conf -n hadoop_logs_conf
-  docker exec docker_solr_1 solr create_collection -force -c audit_logs -d /usr/lib/ambari-infra-solr/server/solr/configsets/audit_logs/conf -n audit_logs_conf
+  docker exec solr solr create_collection -force -c hadoop_logs -d /usr/lib/ambari-infra-solr/server/solr/configsets/hadoop_logs/conf -n hadoop_logs_conf
+  docker exec solr solr create_collection -force -c audit_logs -d /usr/lib/ambari-infra-solr/server/solr/configsets/audit_logs/conf -n audit_logs_conf
   popd
 }
 

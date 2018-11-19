@@ -18,11 +18,11 @@
  */
 package org.apache.ambari.infra.conf.security;
 
+import static org.apache.ambari.infra.conf.security.HadoopCredentialStore.CREDENTIAL_STORE_PROVIDER_PATH_PROPERTY;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static org.apache.ambari.infra.conf.security.HadoopCredentialStore.CREDENTIAL_STORE_PROVIDER_PATH_PROPERTY;
 
 @Configuration
 public class InfraManagerSecurityConfig {
@@ -30,9 +30,32 @@ public class InfraManagerSecurityConfig {
   @Value("${"+ CREDENTIAL_STORE_PROVIDER_PATH_PROPERTY + ":}")
   private String credentialStoreProviderPath;
 
+  @Bean
+  public HadoopCredentialStore hadoopCredentialStore() {
+    return new HadoopCredentialStore(credentialStoreProviderPath);
+  }
 
   @Bean
-  public PasswordStore passwords() {
-    return new CompositePasswordStore(new HadoopCredentialStore(credentialStoreProviderPath), new SecurityEnvironment());
+  public S3Secrets s3SecretStore(HadoopCredentialStore hadoopCredentialStore) {
+    return new S3Secrets(s3AccessKeyId(hadoopCredentialStore), s3SecretKeyId(hadoopCredentialStore));
+  }
+
+  private Secret s3AccessKeyId(HadoopCredentialStore hadoopCredentialStore) {
+    return new CompositeSecret(
+            hadoopCredentialStore.getSecret( "AWS_ACCESS_KEY_ID"),
+            new EnvironmentalSecret("AWS_ACCESS_KEY_ID"));
+  }
+
+  private Secret s3SecretKeyId(HadoopCredentialStore hadoopCredentialStore) {
+    return new CompositeSecret(
+            hadoopCredentialStore.getSecret( "AWS_SECRET_ACCESS_KEY"),
+            new EnvironmentalSecret("AWS_SECRET_ACCESS_KEY"));
+  }
+
+  @Bean
+  public SslSecrets sslSecrets(HadoopCredentialStore hadoopCredentialStore) {
+    return new SslSecrets(
+            hadoopCredentialStore.getSecret("infra_manager_keystore_password"),
+            hadoopCredentialStore.getSecret("infra_manager_truststore_password"));
   }
 }
