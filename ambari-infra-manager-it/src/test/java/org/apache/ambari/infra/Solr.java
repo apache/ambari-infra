@@ -86,7 +86,7 @@ public class Solr {
 
   public void createSolrCollection(String collectionName) {
     logger.info("Creating collection");
-    runCommand(new String[]{"docker", "exec", "docker_solr_1", "solr", "create_collection", "-force", "-c", collectionName, "-d", Paths.get(configSetPath, "configsets", collectionName, "conf").toString(), "-n", collectionName + "_conf"});
+    runCommand(new String[]{"docker", "exec", "solr", "solr", "create_collection", "-force", "-c", collectionName, "-d", Paths.get(configSetPath, "configsets", collectionName, "conf").toString(), "-n", collectionName + "_conf"});
   }
 
   public QueryResponse query(SolrQuery query) {

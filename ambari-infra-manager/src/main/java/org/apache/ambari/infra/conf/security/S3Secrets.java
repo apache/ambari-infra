@@ -18,8 +18,21 @@
  */
 package org.apache.ambari.infra.conf.security;
 
-import java.util.Optional;
+public class S3Secrets {
+  private final Secret s3AccessKeyId;
+  private final Secret s3SecretAccessKey;
 
-public interface PasswordStore {
-  Optional<String> getPassword(String propertyName);
+  public S3Secrets(Secret s3AccessKeyId, Secret s3SecretAccessKey) {
+    this.s3AccessKeyId = s3AccessKeyId;
+    this.s3SecretAccessKey = s3SecretAccessKey;
+  }
+
+
+  public Secret getS3AccessKeyId() {
+    return s3AccessKeyId;
+  }
+
+  public Secret getS3SecretAccessKey() {
+    return s3SecretAccessKey;
+  }
 }

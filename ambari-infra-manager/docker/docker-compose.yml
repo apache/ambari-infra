@@ -15,6 +15,7 @@
 version: '3.3'
 services:
   zookeeper:
+    container_name: zookeeper
     image: zookeeper:${ZOOKEEPER_VERSION:-3.4.10}
     restart: always
     hostname: zookeeper
@@ -27,6 +28,7 @@ services:
       ZOO_SERVERS: server.1=zookeeper:2888:3888
   solr:
 #  TODO: use infra-solr
+    container_name: solr
     image: solr:${SOLR_VERSION:-7.5.0}
     restart: always
     hostname: solr
@@ -47,6 +49,7 @@ services:
     volumes:
       - $AMBARI_INFRA_LOCATION/ambari-infra-manager/docker/configsets:/opt/solr/configsets
   fakes3:
+    container_name: fakes3
     image: localstack/localstack
     hostname: fakes3
     ports:
@@ -61,6 +64,7 @@ services:
     env_file:
       - Profile
   namenode:
+    container_name: hdfs_namenode
     image: flokkr/hadoop-hdfs-namenode:${HADOOP_VERSION:-3.0.0}
     hostname: namenode
     ports:
@@ -73,6 +77,7 @@ services:
     networks:
       - infra-network
   datanode:
+    container_name: hdfs_datanode
     image: flokkr/hadoop-hdfs-datanode:${HADOOP_VERSION:-3.0.0}
     links:
       - namenode
@@ -81,6 +86,7 @@ services:
     networks:
       - infra-network
   inframanager:
+    container_name: inframanager
     image: ambari-infra-manager:v1.0
     restart: always
     hostname: infra-manager.apache.org

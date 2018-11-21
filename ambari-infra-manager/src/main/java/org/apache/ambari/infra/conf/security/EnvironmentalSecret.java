@@ -20,9 +20,16 @@ package org.apache.ambari.infra.conf.security;
 
 import java.util.Optional;
 
-public class SecurityEnvironment implements PasswordStore {
+public class EnvironmentalSecret implements Secret {
+
+  private final String environmentalVariableName;
+
+  public EnvironmentalSecret(String environmentalVariableName) {
+    this.environmentalVariableName = environmentalVariableName;
+  }
+
   @Override
-  public Optional<String> getPassword(String propertyName) {
-    return Optional.ofNullable(System.getenv(propertyName));
+  public Optional<String> get() {
+    return Optional.ofNullable(System.getenv(environmentalVariableName));
   }
 }

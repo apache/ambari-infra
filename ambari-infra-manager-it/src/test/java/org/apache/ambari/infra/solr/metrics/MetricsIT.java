@@ -52,7 +52,7 @@ public class MetricsIT {
     logger.info("Creating new docker containers for testing Ambari Infra Solr Metrics plugin ...");
     runCommand(new String[]{shellScriptLocation, "start"});
 
-    Solr solr = new Solr("/usr/lib/ambari-infra-solr/server/solr");
+    Solr solr = new Solr();
     solr.waitUntilSolrIsUp();
     solr.createSolrCollection(HADOOP_LOGS_COLLECTION);
 

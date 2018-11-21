@@ -27,12 +27,11 @@ import java.io.File;
 import javax.inject.Inject;
 
 import org.apache.ambari.infra.conf.InfraManagerDataConfig;
-import org.apache.ambari.infra.conf.security.PasswordStore;
+import org.apache.ambari.infra.conf.security.S3Secrets;
 import org.apache.ambari.infra.job.AbstractJobsConfiguration;
 import org.apache.ambari.infra.job.JobContextRepository;
 import org.apache.ambari.infra.job.JobScheduler;
 import org.apache.ambari.infra.job.ObjectSource;
-import org.apache.hadoop.fs.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.batch.core.Job;
@@ -91,7 +90,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Ar
                                            @Value("#{jobParameters[end]}") String intervalEnd,
                                            DocumentWiper documentWiper,
                                            JobContextRepository jobContextRepository,
-                                           PasswordStore passwordStore) {
+                                           S3Secrets s3Secrets) {
 
     File baseDir = new File(infraManagerDataConfig.getDataFolder(), "exporting");
     CompositeFileAction fileAction = new CompositeFileAction(new BZip2Compressor());
@@ -99,7 +98,7 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Ar
       case S3:
         fileAction.add(new S3Uploader(
                 parameters.s3Properties().orElseThrow(() -> new IllegalStateException("S3 properties are not provided!")),
-                passwordStore));
+                s3Secrets));
         break;
       case HDFS:
         org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
