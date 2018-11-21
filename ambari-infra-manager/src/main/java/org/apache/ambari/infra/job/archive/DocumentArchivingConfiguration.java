@@ -27,7 +27,6 @@ import java.io.File;
 import javax.inject.Inject;
 
 import org.apache.ambari.infra.conf.InfraManagerDataConfig;
-import org.apache.ambari.infra.conf.security.S3Secrets;
 import org.apache.ambari.infra.job.AbstractJobsConfiguration;
 import org.apache.ambari.infra.job.JobContextRepository;
 import org.apache.ambari.infra.job.JobScheduler;
@@ -89,17 +88,11 @@ public class DocumentArchivingConfiguration extends AbstractJobsConfiguration<Ar
                                            InfraManagerDataConfig infraManagerDataConfig,
                                            @Value("#{jobParameters[end]}") String intervalEnd,
                                            DocumentWiper documentWiper,
-                                           JobContextRepository jobContextRepository,
-                                           S3Secrets s3Secrets) {
+                                           JobContextRepository jobContextRepository) {
 
     File baseDir = new File(infraManagerDataConfig.getDataFolder(), "exporting");
     CompositeFileAction fileAction = new CompositeFileAction(new BZip2Compressor());
     switch (parameters.getDestination()) {
-      case S3:
-        fileAction.add(new S3Uploader(
-                parameters.s3Properties().orElseThrow(() -> new IllegalStateException("S3 properties are not provided!")),
-                s3Secrets));
-        break;
       case HDFS:
         org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
         fileAction.add(new HdfsUploader(conf,

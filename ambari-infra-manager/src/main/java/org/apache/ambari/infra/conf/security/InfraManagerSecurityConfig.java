@@ -36,23 +36,6 @@ public class InfraManagerSecurityConfig {
   }
 
   @Bean
-  public S3Secrets s3SecretStore(HadoopCredentialStore hadoopCredentialStore) {
-    return new S3Secrets(s3AccessKeyId(hadoopCredentialStore), s3SecretKeyId(hadoopCredentialStore));
-  }
-
-  private Secret s3AccessKeyId(HadoopCredentialStore hadoopCredentialStore) {
-    return new CompositeSecret(
-            hadoopCredentialStore.getSecret( "AWS_ACCESS_KEY_ID"),
-            new EnvironmentalSecret("AWS_ACCESS_KEY_ID"));
-  }
-
-  private Secret s3SecretKeyId(HadoopCredentialStore hadoopCredentialStore) {
-    return new CompositeSecret(
-            hadoopCredentialStore.getSecret( "AWS_SECRET_ACCESS_KEY"),
-            new EnvironmentalSecret("AWS_SECRET_ACCESS_KEY"));
-  }
-
-  @Bean
   public SslSecrets sslSecrets(HadoopCredentialStore hadoopCredentialStore) {
     return new SslSecrets(
             hadoopCredentialStore.getSecret("infra_manager_keystore_password"),

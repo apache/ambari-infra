@@ -43,6 +43,16 @@ public class S3Client {
     }
   }
 
+  public void createBucket() {
+    try {
+      if (!s3client.bucketExists(bucket))
+        s3client.makeBucket(bucket);
+    }
+    catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
   public void putObject(String key, InputStream inputStream, long length) {
     try {
       s3client.putObject(bucket, key, inputStream, length, "application/octet-stream");
