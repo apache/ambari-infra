@@ -25,7 +25,6 @@ import static org.apache.ambari.infra.TestUtil.getDockerHost;
 import static org.apache.ambari.infra.TestUtil.runCommand;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -35,16 +34,13 @@ import org.apache.ambari.infra.InfraClient;
 import org.apache.ambari.infra.S3Client;
 import org.apache.ambari.infra.Solr;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.common.SolrInputDocument;
 import org.jbehave.core.annotations.AfterStories;
 import org.jbehave.core.annotations.BeforeStories;
+
+import spark.resource.ClassPathResource;
 
 public abstract class AbstractInfraSteps {
   private static final Logger logger = LogManager.getLogger(AbstractInfraSteps.class);
@@ -76,6 +72,10 @@ public abstract class AbstractInfraSteps {
     return ambariFolder + "/ambari-infra/ambari-infra-manager/docker/test-out";
   }
 
+  public String getInfraManagerConfDir() {
+    return ambariFolder + "/ambari-infra/ambari-infra-manager/ambari-infra-manager/target/package/conf";
+  }
+
   @BeforeStories
   public void initDockerContainer() throws Exception {
     System.setProperty("HADOOP_USER_NAME", "root");
@@ -88,6 +88,8 @@ public abstract class AbstractInfraSteps {
       logger.info("Clean local data folder {}", localDataFolder);
       FileUtils.cleanDirectory(new File(localDataFolder));
     }
+
+    FileUtils.copyDirectory(new ClassPathResource("conf").getFile(), new File(getInfraManagerConfDir()));
 
     shellScriptLocation = ambariFolder + "/ambari-infra/ambari-infra-manager/docker/infra-manager-docker-compose.sh";
     logger.info("Create new docker container for testing Ambari Infra Manager ...");
@@ -103,6 +105,7 @@ public abstract class AbstractInfraSteps {
 
     logger.info("Initializing s3 client");
     s3client = new S3Client(dockerHost, FAKE_S3_PORT, S3_BUCKET_NAME);
+    s3client.createBucket();
 
     checkInfraManagerReachable();
   }
@@ -158,24 +161,7 @@ public abstract class AbstractInfraSteps {
     logger.info("Found {} files on s3.", objectKeys.size());
     objectKeys.forEach(objectKey ->  logger.info("Found file on s3 with key {}", objectKey));
 
-    logger.info("Listing files on hdfs.");
-    try (FileSystem fileSystem = getHdfs()) {
-      int count = 0;
-      RemoteIterator<LocatedFileStatus> it = fileSystem.listFiles(new Path("/test_audit_logs"), true);
-      while (it.hasNext()) {
-        logger.info("Found file on hdfs with name {}", it.next().getPath().getName());
-        ++count;
-      }
-      logger.info("{} files found on hfds", count);
-    }
-
     logger.info("shutdown containers");
     runCommand(new String[]{shellScriptLocation, "stop"});
-  }
-
-  protected FileSystem getHdfs() throws IOException {
-    Configuration conf = new Configuration();
-    conf.set("fs.defaultFS", String.format("hdfs://%s:%d/", dockerHost, HDFS_PORT));
-    return FileSystem.get(conf);
   }
 }

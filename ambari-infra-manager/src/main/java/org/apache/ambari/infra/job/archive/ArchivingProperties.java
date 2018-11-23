@@ -21,7 +21,6 @@ package org.apache.ambari.infra.job.archive;
 import static java.util.Objects.requireNonNull;
 import static org.apache.ambari.infra.job.archive.ExportDestination.HDFS;
 import static org.apache.ambari.infra.job.archive.ExportDestination.LOCAL;
-import static org.apache.ambari.infra.job.archive.ExportDestination.S3;
 import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
 import static org.apache.ambari.infra.json.StringToFsPermissionConverter.toFsPermission;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -49,10 +48,6 @@ public class ArchivingProperties extends JobProperties<ArchivingProperties> impl
   private String fileNameSuffixColumn;
   private String fileNameSuffixDateFormat;
   private SolrProperties solr;
-  private String s3AccessFile;
-  private String s3KeyPrefix;
-  private String s3BucketName;
-  private String s3Endpoint;
   private String hdfsEndpoint;
   private String hdfsDestinationDirectory;
   @JsonSerialize(converter = FsPermissionToStringConverter.class)
@@ -122,38 +117,6 @@ public class ArchivingProperties extends JobProperties<ArchivingProperties> impl
     this.solr = solr;
   }
 
-  public String getS3AccessFile() {
-    return s3AccessFile;
-  }
-
-  public void setS3AccessFile(String s3AccessFile) {
-    this.s3AccessFile = s3AccessFile;
-  }
-
-  public String getS3KeyPrefix() {
-    return s3KeyPrefix;
-  }
-
-  public void setS3KeyPrefix(String s3KeyPrefix) {
-    this.s3KeyPrefix = s3KeyPrefix;
-  }
-
-  public String getS3BucketName() {
-    return s3BucketName;
-  }
-
-  public void setS3BucketName(String s3BucketName) {
-    this.s3BucketName = s3BucketName;
-  }
-
-  public String getS3Endpoint() {
-    return s3Endpoint;
-  }
-
-  public void setS3Endpoint(String s3Endpoint) {
-    this.s3Endpoint = s3Endpoint;
-  }
-
   public String getHdfsEndpoint() {
     return hdfsEndpoint;
   }
@@ -192,17 +155,6 @@ public class ArchivingProperties extends JobProperties<ArchivingProperties> impl
 
   public void setHdfsKerberosKeytabPath(String hdfsKerberosKeytabPath) {
     this.hdfsKerberosKeytabPath = hdfsKerberosKeytabPath;
-  }
-
-  public Optional<S3Properties> s3Properties() {
-    if (isBlank(s3BucketName))
-      return Optional.empty();
-
-    return Optional.of(new S3Properties(
-            s3AccessFile,
-            s3KeyPrefix,
-            s3BucketName,
-            s3Endpoint));
   }
 
   public Optional<HdfsProperties> hdfsProperties() {
@@ -261,12 +213,6 @@ public class ArchivingProperties extends JobProperties<ArchivingProperties> impl
                   "The property localDestinationDirectory can not be null or empty string when destination is set to %s!", LOCAL.name()));
         break;
 
-      case S3:
-        s3Properties()
-                .orElseThrow(() -> new IllegalArgumentException("S3 related properties must be set if the destination is " + S3.name()))
-                .validate();
-        break;
-
       case HDFS:
         hdfsProperties()
                 .orElseThrow(() -> new IllegalArgumentException("HDFS related properties must be set if the destination is " + HDFS.name()))
@@ -286,10 +232,6 @@ public class ArchivingProperties extends JobProperties<ArchivingProperties> impl
     archivingProperties.setLocalDestinationDirectory(jobParameters.getString("localDestinationDirectory", localDestinationDirectory));
     archivingProperties.setFileNameSuffixColumn(jobParameters.getString("fileNameSuffixColumn", fileNameSuffixColumn));
     archivingProperties.setFileNameSuffixDateFormat(jobParameters.getString("fileNameSuffixDateFormat", fileNameSuffixDateFormat));
-    archivingProperties.setS3AccessFile(jobParameters.getString("s3AccessFile", s3AccessFile));
-    archivingProperties.setS3BucketName(jobParameters.getString("s3BucketName", s3BucketName));
-    archivingProperties.setS3KeyPrefix(jobParameters.getString("s3KeyPrefix", s3KeyPrefix));
-    archivingProperties.setS3Endpoint(jobParameters.getString("s3Endpoint", s3Endpoint));
     archivingProperties.setHdfsEndpoint(jobParameters.getString("hdfsEndpoint", hdfsEndpoint));
     archivingProperties.setHdfsDestinationDirectory(jobParameters.getString("hdfsDestinationDirectory", hdfsDestinationDirectory));
     archivingProperties.setHdfsFilePermission(toFsPermission(jobParameters.getString("hdfsFilePermission", FsPermissionToStringConverter.toString(hdfsFilePermission))));

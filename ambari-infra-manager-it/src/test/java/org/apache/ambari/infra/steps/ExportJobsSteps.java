@@ -29,9 +29,7 @@ import static org.junit.Assert.assertThat;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -45,13 +43,10 @@ import org.apache.ambari.infra.InfraClient;
 import org.apache.ambari.infra.JobExecutionInfo;
 import org.apache.ambari.infra.S3Client;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.jbehave.core.annotations.AfterScenario;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
@@ -185,26 +180,6 @@ public class ExportJobsSteps extends AbstractInfraSteps {
     return getSolr().query(query).getResults().isEmpty();
   }
 
-  @Then("Check $count files exists on hdfs with filenames containing the text $text in the folder $path after $waitSec seconds")
-  public void checkNumberOfFilesOnHdfs(int count, String text, String path, int waitSec) throws Exception {
-    try (FileSystem fileSystem = getHdfs()) {
-      doWithin(waitSec, "check uploaded files to hdfs", () -> {
-        try {
-          int fileCount = 0;
-          RemoteIterator<LocatedFileStatus> it = fileSystem.listFiles(new Path(path), true);
-          while (it.hasNext()) {
-            if (it.next().getPath().getName().contains(text))
-              ++fileCount;
-          }
-          return fileCount == count;
-        }
-        catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
-      });
-    }
-  }
-
   @Then("Check $count files exists on local filesystem with filenames containing the text $text in the folder $path for job $jobName")
   public void checkNumberOfFilesOnLocalFilesystem(long count, String text, String path, String jobName) {
     File destinationDirectory = new File(getLocalDataFolder(), path.replace("${jobId}", launchedJobs.get(jobName).getJobId()));
@@ -238,5 +213,10 @@ public class ExportJobsSteps extends AbstractInfraSteps {
     }
     assertThat(documentIds.size(), is(0));
     assertThat(storedDocumentIds.size(), is(size));
+  }
+
+  @AfterScenario
+  public void waitABit() throws InterruptedException {
+    Thread.sleep(5000);
   }
 }
