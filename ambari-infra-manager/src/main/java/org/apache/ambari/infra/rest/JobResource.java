@@ -35,12 +35,12 @@ import javax.ws.rs.Produces;
 
 import org.apache.ambari.infra.manager.JobManager;
 import org.apache.ambari.infra.model.ExecutionContextResponse;
-import org.apache.ambari.infra.model.JobDetailsResponse;
 import org.apache.ambari.infra.model.JobExecutionDetailsResponse;
 import org.apache.ambari.infra.model.JobExecutionInfoResponse;
 import org.apache.ambari.infra.model.JobExecutionRequest;
 import org.apache.ambari.infra.model.JobExecutionRestartRequest;
 import org.apache.ambari.infra.model.JobExecutionStopRequest;
+import org.apache.ambari.infra.model.JobInstanceDetailsResponse;
 import org.apache.ambari.infra.model.JobInstanceStartRequest;
 import org.apache.ambari.infra.model.JobRequest;
 import org.apache.ambari.infra.model.PageRequest;
@@ -120,7 +120,7 @@ public class JobResource {
   @Produces({"application/json"})
   @Path("{jobName}/info")
   @ApiOperation("Get job details by job name.")
-  public JobDetailsResponse getJobDetails(@BeanParam @Valid JobRequest jobRequest) throws NoSuchJobException {
+  public List<JobInstanceDetailsResponse> getJobDetails(@BeanParam @Valid JobRequest jobRequest) throws NoSuchJobException {
     return jobManager.getJobDetails(jobRequest.getJobName(), jobRequest.getPage(), jobRequest.getSize());
   }
 
@@ -136,7 +136,7 @@ public class JobResource {
   @Produces({"application/json"})
   @Path("/executions/{jobExecutionId}")
   @ApiOperation("Get job and step details for job execution instance.")
-  public JobExecutionDetailsResponse getExectionInfo(@PathParam("jobExecutionId") @Valid Long jobExecutionId) throws NoSuchJobExecutionException {
+  public JobExecutionDetailsResponse getExecutionInfo(@PathParam("jobExecutionId") @Valid Long jobExecutionId) throws NoSuchJobExecutionException {
     return jobManager.getExecutionInfo(jobExecutionId);
   }
 
@@ -169,8 +169,8 @@ public class JobResource {
   @GET
   @Produces({"application/json"})
   @Path("/{jobName}/{jobInstanceId}/executions")
-  @ApiOperation("Get execution for job instance.")
-  public List<JobExecutionInfoResponse> getExecutionsForInstance(@BeanParam @Valid JobExecutionRequest request) throws
+  @ApiOperation("Get execution of job instance.")
+  public List<JobExecutionInfoResponse> getExecutionsOfInstance(@BeanParam @Valid JobExecutionRequest request) throws
           NoSuchJobException, NoSuchJobInstanceException {
     return jobManager.getExecutionsForJobInstance(request.getJobName(), request.getJobInstanceId());
   }

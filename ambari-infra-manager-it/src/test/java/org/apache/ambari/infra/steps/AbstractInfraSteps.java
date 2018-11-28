@@ -47,17 +47,16 @@ public abstract class AbstractInfraSteps {
 
   private static final int INFRA_MANAGER_PORT = 61890;
   private static final int FAKE_S3_PORT = 4569;
-  private static final int HDFS_PORT = 9000;
   protected static final String S3_BUCKET_NAME = "testbucket";
   private String ambariFolder;
   private String shellScriptLocation;
-  private String dockerHost;
   private S3Client s3client;
   private int documentId = 0;
   private Solr solr;
+  private InfraClient infraClient;
 
   public InfraClient getInfraClient() {
-    return new InfraClient(String.format("http://%s:%d/api/v1/jobs", dockerHost, INFRA_MANAGER_PORT));
+    return infraClient;
   }
 
   public Solr getSolr() {
@@ -89,13 +88,16 @@ public abstract class AbstractInfraSteps {
       FileUtils.cleanDirectory(new File(localDataFolder));
     }
 
+    logger.info("Copy resources");
     FileUtils.copyDirectory(new ClassPathResource("conf").getFile(), new File(getInfraManagerConfDir()));
 
     shellScriptLocation = ambariFolder + "/ambari-infra/ambari-infra-manager/docker/infra-manager-docker-compose.sh";
     logger.info("Create new docker container for testing Ambari Infra Manager ...");
     runCommand(new String[]{shellScriptLocation, "start"});
 
-    dockerHost = getDockerHost();
+    String dockerHost = getDockerHost();
+
+    this.infraClient = new InfraClient(String.format("http://%s:%d/api/v1", dockerHost, INFRA_MANAGER_PORT));
 
     solr = new Solr();
     solr.waitUntilSolrIsUp();
@@ -110,11 +112,10 @@ public abstract class AbstractInfraSteps {
     checkInfraManagerReachable();
   }
 
-  private void checkInfraManagerReachable() throws Exception {
-    try (InfraClient httpClient = getInfraClient()) {
-      doWithin(30, "Start Ambari Infra Manager", httpClient::getJobs);
-      logger.info("Ambari Infra Manager is up and running");
-    }
+  private void checkInfraManagerReachable() {
+    InfraClient infraClient = getInfraClient();
+    doWithin(30, "Start Ambari Infra Manager", infraClient::getJobs);
+    logger.info("Ambari Infra Manager is up and running");
   }
 
   protected SolrInputDocument addDocument(OffsetDateTime logtime) {
@@ -149,7 +150,7 @@ public abstract class AbstractInfraSteps {
     solrInputDocument.addField("logtime", new Date(logtime.toInstant().toEpochMilli()));
     solrInputDocument.addField("evtTime", new Date(logtime.toInstant().toEpochMilli()));
     solrInputDocument.addField("_ttl_", "+7DAYS");
-    solrInputDocument.addField("_expire_at_", "2017-12-15T10:23:19.106Z");
+    solrInputDocument.addField("_expire_at_", new Date(logtime.plusDays(7).toInstant().toEpochMilli()));
     solr.add(solrInputDocument);
     return solrInputDocument;
   }

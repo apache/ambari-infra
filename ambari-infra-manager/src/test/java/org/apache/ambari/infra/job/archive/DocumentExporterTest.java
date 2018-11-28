@@ -36,8 +36,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
@@ -56,6 +56,8 @@ public class DocumentExporterTest extends EasyMockSupport {
   private static final Document DOCUMENT_3 = new Document(new HashMap<String, Object>() {{
     put("id", "3");
   }});
+  private static final StepContribution ANY_STEP_CONTRIBUTION = new StepContribution(new StepExecution("any", new JobExecution(1L)));
+
   private DocumentExporter documentExporter;
   @Mock
   private ItemStreamReader<Document> reader;
@@ -74,8 +76,8 @@ public class DocumentExporterTest extends EasyMockSupport {
   private static final Document DOCUMENT = new Document(new HashMap<String, Object>() {{ put("id", "1"); }});
 
   @Before
-  public void setUp() throws Exception {
-    chunkContext = chunkContext(BatchStatus.STARTED);
+  public void setUp() {
+    chunkContext = chunkContext(false);
     documentExporter = documentExporter(2);
   }
 
@@ -83,15 +85,16 @@ public class DocumentExporterTest extends EasyMockSupport {
     return new DocumentExporter(reader, documentDestination, writeBlockSize, jobContextRepository);
   }
 
-  private ChunkContext chunkContext(BatchStatus batchStatus) {
+  private ChunkContext chunkContext(boolean terminate) {
     StepExecution stepExecution = new StepExecution("exportDoc", new JobExecution(JOB_EXECUTION_ID));
     stepExecution.setId(STEP_EXECUTION_ID);
-    stepExecution.getJobExecution().setStatus(batchStatus);
+    if (terminate)
+      stepExecution.setTerminateOnly();
     return new ChunkContext(new StepContext(stepExecution));
   }
 
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
     verifyAll();
   }
 
@@ -102,7 +105,7 @@ public class DocumentExporterTest extends EasyMockSupport {
     reader.close(); expectLastCall();
     replayAll();
 
-    documentExporter.execute(null, chunkContext);
+    documentExporter.execute(ANY_STEP_CONTRIBUTION, chunkContext);
   }
 
   private ExecutionContext executionContext(ChunkContext chunkContext) {
@@ -120,7 +123,7 @@ public class DocumentExporterTest extends EasyMockSupport {
     documentItemWriter.close(); expectLastCall();
     replayAll();
 
-    assertThat(documentExporter.execute(null, chunkContext), is(RepeatStatus.FINISHED));
+    assertThat(documentExporter.execute(ANY_STEP_CONTRIBUTION, chunkContext), is(RepeatStatus.FINISHED));
   }
 
   @Test
@@ -143,7 +146,7 @@ public class DocumentExporterTest extends EasyMockSupport {
     documentItemWriter2.close(); expectLastCall();
     replayAll();
 
-    assertThat(documentExporter.execute(null, chunkContext), is(RepeatStatus.FINISHED));
+    assertThat(documentExporter.execute(ANY_STEP_CONTRIBUTION, chunkContext), is(RepeatStatus.FINISHED));
   }
 
   @Test(expected = IOException.class)
@@ -157,7 +160,7 @@ public class DocumentExporterTest extends EasyMockSupport {
     reader.close(); expectLastCall();
     replayAll();
 
-    documentExporter.execute(null, chunkContext);
+    documentExporter.execute(ANY_STEP_CONTRIBUTION, chunkContext);
   }
 
   @Test(expected = UncheckedIOException.class)
@@ -170,12 +173,12 @@ public class DocumentExporterTest extends EasyMockSupport {
     reader.close(); expectLastCall();
     replayAll();
 
-    documentExporter.execute(null, chunkContext);
+    documentExporter.execute(ANY_STEP_CONTRIBUTION, chunkContext);
   }
 
   @Test
   public void testStopAndRestartExportsAllDocuments() throws Exception {
-    ChunkContext stoppingChunkContext = chunkContext(BatchStatus.STOPPING);
+    ChunkContext stoppingChunkContext = chunkContext(true);
     DocumentExporter documentExporter = documentExporter(1);
 
     reader.open(executionContext(chunkContext)); expectLastCall();
@@ -206,9 +209,9 @@ public class DocumentExporterTest extends EasyMockSupport {
     reader.close(); expectLastCall();
     replayAll();
 
-    RepeatStatus repeatStatus = documentExporter.execute(null, this.chunkContext);
+    RepeatStatus repeatStatus = documentExporter.execute(ANY_STEP_CONTRIBUTION, this.chunkContext);
     assertThat(repeatStatus, is(RepeatStatus.CONTINUABLE));
-    repeatStatus = documentExporter.execute(null, this.chunkContext);
+    repeatStatus = documentExporter.execute(ANY_STEP_CONTRIBUTION, this.chunkContext);
     assertThat(repeatStatus, is(RepeatStatus.FINISHED));
   }
 }

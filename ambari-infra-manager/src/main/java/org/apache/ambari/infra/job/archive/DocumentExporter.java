@@ -21,7 +21,6 @@ package org.apache.ambari.infra.job.archive;
 import org.apache.ambari.infra.job.JobContextRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -31,6 +30,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.lang.NonNull;
 
 public class DocumentExporter implements Tasklet, StepExecutionListener {
 
@@ -50,12 +50,12 @@ public class DocumentExporter implements Tasklet, StepExecutionListener {
   }
 
   @Override
-  public void beforeStep(StepExecution stepExecution) {
+  public void beforeStep(@NonNull StepExecution stepExecution) {
 
   }
 
   @Override
-  public ExitStatus afterStep(StepExecution stepExecution) {
+  public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
     if (complete) {
       return ExitStatus.COMPLETED;
     }
@@ -65,7 +65,7 @@ public class DocumentExporter implements Tasklet, StepExecutionListener {
   }
 
   @Override
-  public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+  public RepeatStatus execute(@NonNull StepContribution contribution, @NonNull ChunkContext chunkContext) throws Exception {
     StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
     ExecutionContext executionContext = stepExecution.getExecutionContext();
     documentReader.open(executionContext);
@@ -77,7 +77,7 @@ public class DocumentExporter implements Tasklet, StepExecutionListener {
       while ((document = documentReader.read()) != null) {
         if (writer != null && writtenCount >= writeBlockSize) {
           stepExecution = jobContextRepository.getStepExecution(stepExecution.getJobExecutionId(), stepExecution.getId());
-          if (stepExecution.getJobExecution().getStatus() == BatchStatus.STOPPING) {
+          if (stepExecution.isTerminateOnly()) {
             logger.info("Received stop signal.");
             writer.revert();
             writer = null;
