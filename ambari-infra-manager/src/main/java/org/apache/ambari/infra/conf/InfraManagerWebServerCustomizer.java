@@ -23,6 +23,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.time.Duration;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.ambari.infra.conf.security.SslSecrets;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,9 +31,8 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.stereotype.Component;
 
-@Component
+@Named
 public class InfraManagerWebServerCustomizer implements WebServerFactoryCustomizer<JettyServletWebServerFactory> {
 
   @Value("${infra-manager.server.port:61890}")

@@ -73,7 +73,7 @@ public abstract class AbstractInfraSteps {
   }
 
   public String getInfraManagerConfDir() {
-    return ambariFolder + "/ambari-infra/ambari-infra-manager/ambari-infra-manager/target/package/conf";
+    return ambariFolder + "/ambari-infra/ambari-infra-manager/target/package/conf";
   }
 
   @BeforeStories

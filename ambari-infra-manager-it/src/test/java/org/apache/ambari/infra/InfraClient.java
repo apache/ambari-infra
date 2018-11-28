@@ -29,13 +29,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -60,7 +64,16 @@ public class InfraClient implements AutoCloseable {
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
-    httpClient = HttpClientBuilder.create().setRetryHandler(new DefaultHttpRequestRetryHandler(0, false)).build();
+
+    CredentialsProvider provider = new BasicCredentialsProvider();
+    UsernamePasswordCredentials credentials
+            = new UsernamePasswordCredentials("admin", "admin");
+    provider.setCredentials(AuthScope.ANY, credentials);
+
+    httpClient = HttpClientBuilder.create()
+            .setRetryHandler(new DefaultHttpRequestRetryHandler(0, false))
+            .setDefaultCredentialsProvider(provider)
+            .build();
   }
 
   @Override
