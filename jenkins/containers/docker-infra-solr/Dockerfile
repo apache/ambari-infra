@@ -44,6 +44,7 @@ RUN find /usr/lib/ambari-infra-solr -type f -exec chmod 644 {} +
 RUN find /usr/lib/ambari-infra-solr-client -type d -exec chmod 755 {} +
 RUN find /usr/lib/ambari-infra-solr-client -type f -exec chmod 644 {} +
 RUN chmod +x /usr/lib/ambari-infra-solr/bin/solr && chmod +x /usr/lib/ambari-infra-solr/bin/solr.in.sh
+RUN chmod +x /usr/lib/ambari-infra-solr-client/solrCloudCli.sh && chmod +x /usr/lib/ambari-infra-solr-client/solrCloudCli.sh && chmod +X /usr/lib/ambari-infra-solr-client/solrIndexHelper.sh && chmod +x /usr/lib/ambari-infra-solr-client/solrDataManager.py && chmod +x /usr/lib/ambari-infra-solr-client/migrationHelper.py
 
 USER $SOLR_USER
 
