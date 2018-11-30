@@ -43,6 +43,7 @@ RUN find /usr/lib/ambari-infra-solr -type d -exec chmod 755 {} +
 RUN find /usr/lib/ambari-infra-solr -type f -exec chmod 644 {} +
 RUN find /usr/lib/ambari-infra-solr-client -type d -exec chmod 755 {} +
 RUN find /usr/lib/ambari-infra-solr-client -type f -exec chmod 644 {} +
+RUN chmod +x /usr/lib/ambari-infra-solr/bin/solr && chmod +x /usr/lib/ambari-infra-solr/bin/solr.in.sh
 
 USER $SOLR_USER
 
