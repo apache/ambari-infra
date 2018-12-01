@@ -26,6 +26,7 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.lang.NonNull;
 
 public class DocumentWiperTasklet extends SolrDAOBase implements Tasklet {
   private final DeletingProperties parameters;
@@ -36,7 +37,7 @@ public class DocumentWiperTasklet extends SolrDAOBase implements Tasklet {
   }
 
   @Override
-  public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
+  public RepeatStatus execute(@NonNull StepContribution contribution, @NonNull ChunkContext chunkContext) {
     delete(String.format("%s:[%s TO %s]",
             parameters.getFilterField(),
             getValue(parameters.getStart()),

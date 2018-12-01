@@ -20,13 +20,20 @@ package org.apache.ambari.infra.json;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
+import javax.inject.Named;
+
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
 
-public class StringToFsPermissionConverter extends StdConverter<String, FsPermission> {
+@Named
+@ConfigurationPropertiesBinding
+public class StringToFsPermissionConverter extends StdConverter<String, FsPermission> implements Converter<String, FsPermission> {
   @Override
-  public FsPermission convert(String value) {
+  public FsPermission convert(@NonNull String value) {
     return toFsPermission(value);
   }
 

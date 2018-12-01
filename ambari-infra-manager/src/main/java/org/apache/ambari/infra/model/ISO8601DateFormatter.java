@@ -16,23 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.conf;
+package org.apache.ambari.infra.model;
 
-import static org.apache.ambari.infra.json.StringToDurationConverter.toDuration;
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.ParsePosition;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
-import java.time.Duration;
-
-import javax.annotation.Nullable;
-import javax.inject.Named;
-
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
-import org.springframework.core.convert.converter.Converter;
-
-@Named
-@ConfigurationPropertiesBinding
-public class DurationConverter implements Converter<String, Duration> {
+public class ISO8601DateFormatter extends DateFormat {
   @Override
-  public Duration convert(@Nullable String s) {
-    return toDuration(s);
+  public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
+    toAppendTo.append(DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(DateUtil.toOffsetDateTime(date)));
+    return toAppendTo;
+  }
+
+  @Override
+  public Date parse(String source, ParsePosition pos) {
+    OffsetDateTime offsetDateTime = OffsetDateTime.parse(source, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    pos.setIndex(pos.getIndex() + source.length());
+    return Date.from(offsetDateTime.toInstant());
   }
 }

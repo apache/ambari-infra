@@ -40,8 +40,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.ambari.infra.InfraClient;
-import org.apache.ambari.infra.JobExecutionInfo;
 import org.apache.ambari.infra.S3Client;
+import org.apache.ambari.infra.client.model.JobExecutionInfoResponse;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +58,7 @@ public class ExportJobsSteps extends AbstractInfraSteps {
   private static final Logger logger = LogManager.getLogger(ExportJobsSteps.class);
   private Set<String> documentIds = new HashSet<>();
 
-  private Map<String, JobExecutionInfo> launchedJobs = new HashMap<>();
+  private Map<String, JobExecutionInfoResponse> launchedJobs = new HashMap<>();
 
   @Given("$count documents in solr")
   public void addDocuments(int count) {
@@ -94,32 +94,24 @@ public class ExportJobsSteps extends AbstractInfraSteps {
   @When("start $jobName job with parameters $parameters after $waitSec seconds")
   public void startJob(String jobName, String parameters, int waitSec) throws Exception {
     Thread.sleep(waitSec * 1000);
-    try (InfraClient httpClient = getInfraClient()) {
-      JobExecutionInfo jobExecutionInfo = httpClient.startJob(jobName, parameters);
-      logger.info("Job {} started: {}", jobName, jobExecutionInfo);
-      launchedJobs.put(jobName, jobExecutionInfo);
-    }
+    JobExecutionInfoResponse jobExecutionInfo = getInfraClient().startJob(jobName, parameters);
+    logger.info("Job {} started: {}", jobName, jobExecutionInfo);
+    launchedJobs.put(jobName, jobExecutionInfo);
   }
 
   @When("restart $jobName job within $waitSec seconds")
   public void restartJob(String jobName, int waitSec) {
-    doWithin(waitSec, "Restarting job " + jobName, () -> {
-      try (InfraClient httpClient = getInfraClient()) {
-        httpClient.restartJob(jobName, launchedJobs.get(jobName).getJobId());
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    });
+    doWithin(waitSec, "Restarting job " + jobName, () ->
+            getInfraClient().restartJob(jobName, launchedJobs.get(jobName).getJobInstanceId()));
   }
 
   @When("stop job $jobName after at least $count file exists in s3 with filename containing text $text within $waitSec seconds")
   public void stopJob(String jobName, int count, String text, int waitSec) throws Exception {
     S3Client s3Client = getS3client();
     doWithin(waitSec, "check uploaded files to s3", () -> s3Client.listObjectKeys(text).size() > count);
-
-    try (InfraClient httpClient = getInfraClient()) {
-      httpClient.stopJob(launchedJobs.get(jobName).getExecutionId());
-    }
+    InfraClient infraClient = getInfraClient();
+    infraClient.stopJob(launchedJobs.get(jobName).getJobExecutionId());
+    doWithin(waitSec, String.format("Wait for job %s stops", jobName), () -> infraClient.isRunning(jobName));
   }
 
   @When("delete file with key $key from s3")
@@ -182,7 +174,7 @@ public class ExportJobsSteps extends AbstractInfraSteps {
 
   @Then("Check $count files exists on local filesystem with filenames containing the text $text in the folder $path for job $jobName")
   public void checkNumberOfFilesOnLocalFilesystem(long count, String text, String path, String jobName) {
-    File destinationDirectory = new File(getLocalDataFolder(), path.replace("${jobId}", launchedJobs.get(jobName).getJobId()));
+    File destinationDirectory = new File(getLocalDataFolder(), path.replace("${jobId}", Long.toString(launchedJobs.get(jobName).getJobInstanceId())));
     logger.info("Destination directory path: {}", destinationDirectory.getAbsolutePath());
     doWithin(5, "Destination directory exists", destinationDirectory::exists);
 
@@ -216,7 +208,21 @@ public class ExportJobsSteps extends AbstractInfraSteps {
   }
 
   @AfterScenario
-  public void waitABit() throws InterruptedException {
-    Thread.sleep(5000);
+  public void waitForJobStops() throws InterruptedException {
+    InfraClient infraClient = getInfraClient();
+    doWithin(20, "Stop all launched jobs", () -> {
+      int runningJobCount = 0;
+      for (String jobName : launchedJobs.keySet()) {
+        if (launchedJobs.get(jobName) == null)
+          continue;
+        if (!infraClient.isRunning(jobName)) {
+          launchedJobs.put(jobName, null);
+        }
+        else {
+          ++runningJobCount;
+        }
+      }
+      return runningJobCount == 0;
+    });
   }
 }

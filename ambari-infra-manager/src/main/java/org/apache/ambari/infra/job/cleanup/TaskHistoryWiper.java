@@ -28,20 +28,21 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.lang.NonNull;
 
 public class TaskHistoryWiper implements Tasklet {
 
   private static final Logger logger = LogManager.getLogger(TaskHistoryWiper.class);
-  public static final Duration DEFAULT_TTL = Duration.ofHours(1);
+  private static final Duration MINIMUM_TTL = Duration.ofHours(1);
 
   private final InfraJobExecutionDao infraJobExecutionDao;
   private final Duration ttl;
 
   public TaskHistoryWiper(InfraJobExecutionDao infraJobExecutionDao, Duration ttl) {
     this.infraJobExecutionDao = infraJobExecutionDao;
-    if (ttl == null || ttl.compareTo(DEFAULT_TTL) < 0) {
-      logger.info("The ttl value ({}) less than the minimum required. Using the default ({}) instead", ttl, DEFAULT_TTL);
-      this.ttl = DEFAULT_TTL;
+    if (ttl == null || ttl.compareTo(MINIMUM_TTL) < 0) {
+      logger.info("The ttl value ({}) less than the minimum required. Using the minimum ({}) instead", ttl, MINIMUM_TTL);
+      this.ttl = MINIMUM_TTL;
     }
     else {
       this.ttl = ttl;
@@ -49,7 +50,7 @@ public class TaskHistoryWiper implements Tasklet {
   }
 
   @Override
-  public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
+  public RepeatStatus execute(@NonNull StepContribution contribution, @NonNull ChunkContext chunkContext) {
     infraJobExecutionDao.deleteJobExecutions(OffsetDateTime.now().minus(ttl));
     return RepeatStatus.FINISHED;
   }

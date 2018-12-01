@@ -16,22 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ambari.infra.conf;
+package org.apache.ambari.infra.json;
 
-import static org.apache.ambari.infra.json.StringToFsPermissionConverter.toFsPermission;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
-import javax.annotation.Nullable;
-import javax.inject.Named;
+import com.fasterxml.jackson.databind.util.StdConverter;
 
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
-import org.springframework.core.convert.converter.Converter;
+public class OffsetDateTimeToStringConverter extends StdConverter<OffsetDateTime, String> {
 
-@Named
-@ConfigurationPropertiesBinding
-public class FsPermissionConverter implements Converter<String, FsPermission> {
   @Override
-  public FsPermission convert(@Nullable String s) {
-    return toFsPermission(s);
+  public String convert(OffsetDateTime value) {
+    return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(value);
   }
 }

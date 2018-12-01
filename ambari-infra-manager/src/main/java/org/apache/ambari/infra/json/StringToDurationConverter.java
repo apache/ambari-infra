@@ -20,11 +20,19 @@ package org.apache.ambari.infra.json;
 
 import java.time.Duration;
 
+import javax.inject.Named;
+
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
+
 import com.fasterxml.jackson.databind.util.StdConverter;
 
-public class StringToDurationConverter extends StdConverter<String, Duration> {
+@Named
+@ConfigurationPropertiesBinding
+public class StringToDurationConverter extends StdConverter<String, Duration> implements Converter<String, Duration> {
   @Override
-  public Duration convert(String value) {
+  public Duration convert(@NonNull String value) {
     return toDuration(value);
   }
 
