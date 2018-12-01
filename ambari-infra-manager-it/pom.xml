@@ -33,7 +33,7 @@
 
   <properties>
     <jbehave.version>4.0.5</jbehave.version>
-    <failsafePlugin.version>2.20</failsafePlugin.version>
+    <failsafePlugin.version>3.0.0-M1</failsafePlugin.version>
     <infraManager.docker.host>localhost</infraManager.docker.host>
     <stories.location>NONE</stories.location>
     <okhttp.version>2.7.5</okhttp.version>
@@ -195,6 +195,11 @@
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>logging-interceptor</artifactId>
       <version>${okhttp.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+      <version>1.3.2</version>
     </dependency>
   </dependencies>
 

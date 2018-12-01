@@ -25,12 +25,12 @@ export INFRA_MANAGER_DEBUG_PORT=5005
 # Infra Manager memory
 # export INFRA_MANAGER_JAVA_MEM="--Xmx1024m"
 
-# export LOG_PATH=/var/log/ambari-logsearch-logfeeder/
-# export LOG_FILE=logsearch.log
+#export LOG_PATH=/var/log/ambari-infra-manager/
+#export LOG_FILE=infra-manager.log
 
 # Pid file of the application
-# export INFRA_MANAGER_PID_DIR=/var/run/ambari-infra-manager
-# export INFRA_MANAGER_PID_FILE=infra-manager.pid
+#export INFRA_MANAGER_PID_DIR=/var/run/ambari-infra-manager
+#export INFRA_MANAGER_PID_FILE=infra-manager.pid
 
 # SSL settings"
 # export INFRA_MANAGER_SSL="true"
