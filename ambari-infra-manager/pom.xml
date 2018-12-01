@@ -142,7 +142,7 @@
                 </license>
               </info>
               <outputFormats>yaml,json</outputFormats>
-              <swaggerDirectory>src/main/resources/swagger</swaggerDirectory>
+              <swaggerDirectory>${project.basedir}/src/main/resources/swagger</swaggerDirectory>
               <securityDefinitions>
                 <securityDefinition>
                   <name>basicAuth</name>

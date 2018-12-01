@@ -33,12 +33,12 @@
 
   <properties>
     <jbehave.version>4.0.5</jbehave.version>
-    <failsafe-plugin.version>2.20</failsafe-plugin.version>
-    <infra-manager.docker.host>localhost</infra-manager.docker.host>
+    <failsafePlugin.version>2.20</failsafePlugin.version>
+    <infraManager.docker.host>localhost</infraManager.docker.host>
     <stories.location>NONE</stories.location>
-    <okhttp-version>2.7.5</okhttp-version>
-    <generated-sources-java-path>main/java</generated-sources-java-path>
-    <generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
+    <okhttp.version>2.7.5</okhttp.version>
+    <generatedSourcesPath>${project.build.directory}/generated-sources</generatedSourcesPath>
+    <generatedSourcesJavaPath>main/java</generatedSourcesJavaPath>
   </properties>
 
   <dependencies>
@@ -189,12 +189,12 @@
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>okhttp</artifactId>
-      <version>${okhttp-version}</version>
+      <version>${okhttp.version}</version>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>logging-interceptor</artifactId>
-      <version>${okhttp-version}</version>
+      <version>${okhttp.version}</version>
     </dependency>
   </dependencies>
 
@@ -226,9 +226,9 @@
               <language>java</language>
               <generateApiTests>false</generateApiTests>
               <generateModelTests>false</generateModelTests>
-              <output>${generated-sources-path}</output>
+              <output>${generatedSourcesPath}</output>
               <configOptions>
-                <sourceFolder>${generated-sources-java-path}</sourceFolder>
+                <sourceFolder>${generatedSourcesJavaPath}</sourceFolder>
                 <apiPackage>org.apache.ambari.infra.client.api</apiPackage>
                 <modelPackage>org.apache.ambari.infra.client.model</modelPackage>
                 <invokerPackage>org.apache.ambari.infra.client.invoker</invokerPackage>
@@ -251,7 +251,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>${generated-sources-path}/${generated-sources-java-path}</source>
+                <source>${generatedSourcesPath}/${generatedSourcesJavaPath}</source>
               </sources>
             </configuration>
           </execution>
@@ -273,7 +273,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>${failsafe-plugin.version}</version>
+            <version>${failsafePlugin.version}</version>
             <executions>
               <execution>
                 <id>run-integration-tests</id>
@@ -288,7 +288,7 @@
                   </includes>
                   <systemPropertyVariables>
                     <log4j.configuration>file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
-                    <docker.host>${infra-manager.docker.host}</docker.host>
+                    <docker.host>${infraManager.docker.host}</docker.host>
                     <backend.stories.location>${stories.location}</backend.stories.location>
                   </systemPropertyVariables>
                 </configuration>

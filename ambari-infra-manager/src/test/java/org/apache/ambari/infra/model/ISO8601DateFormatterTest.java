@@ -31,14 +31,6 @@ import org.junit.Test;
 public class ISO8601DateFormatterTest {
 
   @Test
-  public void testParsingTheFormattedDateIsEqualsWithTheInitialDate() throws ParseException {
-    Date now = new Date();
-    ISO8601DateFormatter iso8601DateFormatter = new ISO8601DateFormatter();
-    Date parsed = iso8601DateFormatter.parse(iso8601DateFormatter.format(now));
-    assertThat(parsed, is(now));
-  }
-
-  @Test
   public void testFormat() {
     OffsetDateTime offsetDateTime = OffsetDateTime.of(
             2018, 11, 30,
@@ -46,5 +38,13 @@ public class ISO8601DateFormatterTest {
             ZoneOffset.ofHoursMinutes(1, 30));
     String text = new ISO8601DateFormatter().format(Date.from(offsetDateTime.toInstant()));
     assertThat(text, is("2018-11-30T01:00:11Z"));
+  }
+
+  @Test
+  public void testParse() throws ParseException {
+    Date now = new Date();
+    ISO8601DateFormatter iso8601DateFormatter = new ISO8601DateFormatter();
+    Date parsed = iso8601DateFormatter.parse(iso8601DateFormatter.format(now));
+    assertThat(parsed, is(now));
   }
 }
