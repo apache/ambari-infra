@@ -86,7 +86,7 @@ services:
     networks:
       - infra-network
   inframanager:
-    container_name: inframanager
+    container_name: infra_manager
     image: ambari-infra-manager:v1.0
     restart: always
     hostname: infra-manager.apache.org
@@ -98,8 +98,8 @@ services:
       - 61890:61890
       - 5007:5007
     environment:
-      COMPONENT: infra-manager
-      COMPONENT_LOG: infra-manager
+      COMPONENT: infra_manager
+      COMPONENT_LOG: infra_manager
       ZK_CONNECT_STRING: ${ZOOKEEPER_CONNECTION_STRING}
       DISPLAY: $DOCKERIP:0
     volumes:
