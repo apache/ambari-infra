@@ -36,6 +36,7 @@
     <zookeeper.version>3.4.6.2.3.0.0-2557</zookeeper.version>
     <ambari-metrics.version>2.7.0.0.0</ambari-metrics.version>
     <skipSurefireTests>false</skipSurefireTests>
+    <log4j2.version>2.10.0</log4j2.version>
   </properties>
 
   <licenses>
