@@ -29,7 +29,7 @@ services:
   solr:
 #  TODO: use infra-solr
     container_name: solr
-    image: solr:${SOLR_VERSION:-7.5.0}
+    image: solr:${SOLR_VERSION:-7.6.0}
     restart: always
     hostname: solr
     ports:
