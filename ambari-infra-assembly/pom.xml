@@ -175,34 +175,10 @@
                   <goal>run</goal>
                 </goals>
                 <configuration>
-                  <target name="Download Solr">
-                    <get
-                      src="${solr.tar}"
-                      dest="${project.build.directory}/solr.tgz"
-                      usetimestamp="true"
-                    />
-                    <untar
-                      src="${project.build.directory}/solr.tgz"
-                      dest="${project.build.directory}/"
-                      compression="gzip"
-                    />
-                    <move todir="${project.build.directory}/solr">
-                      <fileset dir="${project.build.directory}/solr-${solr.version}"/>
-                    </move>
-
-                    <delete file="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/${common-fileupload.old.jar.name}"/>
-                    <get src="${common-fileupload.location.url}" dest="target/${common-fileupload.jar.name}" usetimestamp="true"/>
-                    <move file="target/${common-fileupload.jar.name}"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-
-                    <copy file="${infra.solr.plugin.dir}/target/ambari-infra-solr-plugin-${project.version}.jar"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <copy file="${infra.solr.plugin.dir}/target/libs/ambari-metrics-common-${ambari-metrics.version}.jar"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <copy file="${infra.solr.plugin.dir}/target/libs/commons-logging-1.1.1.jar"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <chmod file="${project.build.directory}/solr/bin/**" perm="755"/>
-                    <chmod file="${project.build.directory}/solr/server/scripts/**" perm="755"/>
+                  <target>
+                    <ant antfile="build.xml">
+                      <target name="package"/>
+                    </ant>
                   </target>
                 </configuration>
               </execution>
@@ -370,44 +346,10 @@
                   <goal>run</goal>
                 </goals>
                 <configuration>
-                  <target name="Download Solr">
-                    <get
-                      src="${solr.tar}"
-                      dest="${project.build.directory}/solr.tgz"
-                      usetimestamp="true"
-                    />
-                    <untar
-                      src="${project.build.directory}/solr.tgz"
-                      dest="${project.build.directory}/"
-                      compression="gzip"
-                    />
-                    <move todir="${project.build.directory}/solr">
-                      <fileset dir="${project.build.directory}/solr-${solr.version}"/>
-                    </move>
-
-                    <delete file="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/${common-fileupload.old.jar.name}"/>
-                    <get src="${common-fileupload.location.url}" dest="target/${common-fileupload.jar.name}" usetimestamp="true"/>
-                    <move file="target/${common-fileupload.jar.name}"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-
-                    <copy file="${infra.solr.plugin.dir}/target/ambari-infra-solr-plugin-${project.version}.jar"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <copy file="${infra.solr.plugin.dir}/target/libs/ambari-metrics-common-${ambari-metrics.version}.jar"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <copy file="${infra.solr.plugin.dir}/target/libs/commons-logging-1.1.1.jar"
-                          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-                    <chmod file="${project.build.directory}/solr/bin/**" perm="755"/>
-                    <chmod file="${project.build.directory}/solr/server/scripts/**" perm="755"/>
-
-                    <copy todir="${project.build.directory}" >
-                      <fileset dir="${jenkins.docker.folder}" includes="**"/>
-                    </copy>
-                    <copy todir="${project.build.directory}/docker-infra-solr/solr" >
-                      <fileset dir="${project.build.directory}/solr" includes="**"/>
-                    </copy>
-                    <copy todir="${project.build.directory}/docker-infra-solr/solr-client" >
-                      <fileset dir="${solr.client.dir}/target/package" includes="**"/>
-                    </copy>
+                  <target>
+                    <ant antfile="build.xml">
+                      <target name="package"/>
+                    </ant>
                   </target>
                 </configuration>
               </execution>
