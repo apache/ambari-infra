@@ -22,6 +22,9 @@ endif
 package:
 	$(MAVEN_BINARY) clean package -Djdk.version=$(INFRA_JAVA_VERSION)
 
+install:
+	$(MAVEN_BINARY) clean install -Djdk.version=$(INFRA_JAVA_VERSION)
+
 test:
 	$(MAVEN_BINARY) clean test -Djdk.version=$(INFRA_JAVA_VERSION)
 
