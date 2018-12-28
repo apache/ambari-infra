@@ -13,23 +13,32 @@
 GIT_REV_SHORT = $(shell git rev-parse --short HEAD)
 MAVEN_BINARY ?= mvn
 
+ifeq ("$(INFRA_JDK_11)", "true")
+  INFRA_JAVA_VERSION = "11"
+else
+  INFRA_JAVA_VERSION = "1.8"
+endif
+
 package:
-	$(MAVEN_BINARY) clean package
+	$(MAVEN_BINARY) clean package -Djdk.version=$(INFRA_JAVA_VERSION)
+
+install:
+	$(MAVEN_BINARY) clean install -Djdk.version=$(INFRA_JAVA_VERSION)
 
 test:
-	$(MAVEN_BINARY) clean test
+	$(MAVEN_BINARY) clean test -Djdk.version=$(INFRA_JAVA_VERSION)
 
 update-version:
-	$(MAVEN_BINARY) versions:set -DnewVersion=$(new-version) -DgenerateBackupPoms=false
+	$(MAVEN_BINARY) versions:set-property -Dproperty=revision -DnewVersion=$(new-version) -DgenerateBackupPoms=false -Djdk.version=$(INFRA_JAVA_VERSION)
 
 rpm:
-	$(MAVEN_BINARY) clean package -Dbuild-rpm -DskipTests
+	$(MAVEN_BINARY) clean package -Dbuild-rpm -DskipTests -Djdk.version=$(INFRA_JAVA_VERSION)
 
 deb:
-	$(MAVEN_BINARY) clean package -Dbuild-deb -DskipTests
+	$(MAVEN_BINARY) clean package -Dbuild-deb -DskipTests -Djdk.version=$(INFRA_JAVA_VERSION)
 
 docker-build:
-	$(MAVEN_BINARY) clean package docker:build -DskipTests -Dbuild-deb
+	$(MAVEN_BINARY) clean package docker:build -DskipTests -Dbuild-deb -Djdk.version=$(INFRA_JAVA_VERSION)
 
 docker-push:
-	$(MAVEN_BINARY) clean package docker:build docker:push -DskipTests -Dbuild-deb
+	$(MAVEN_BINARY) clean package docker:build docker:push -DskipTests -Dbuild-deb -Djdk.version=$(INFRA_JAVA_VERSION)

@@ -16,3 +16,4 @@ derby.log
 pass.txt
 out
 job-repository.db
+.flattened-pom.xml
