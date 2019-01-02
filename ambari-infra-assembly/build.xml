@@ -6,9 +6,7 @@
    The ASF licenses this file to You under the Apache License, Version 2.0
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
-
        http://www.apache.org/licenses/LICENSE-2.0
-
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,6 +35,26 @@
     <move file="target/${common-fileupload.jar.name}"
           toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
 
+    <delete>
+      <fileset dir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/">
+        <include name="hadoop-*.jar"/>
+      </fileset>
+    </delete>
+
+    <copy todir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/">
+      <fileset dir="${infra.solr.plugin.dir}/target/libs">
+        <include name="hadoop-*.jar"/>
+        <include name="aws-java*.jar"/>
+        <include name="azure-*.jar"/>
+        <include name="wildfly*.jar"/>
+        <include name="jetty-uti*.jar"/>
+        <include name="gcs*.jar"/>
+        <include name="google*.jar"/>
+        <include name="util-*.jar"/>
+        <include name="jets3t-*.jar"/>
+      </fileset>
+    </copy>
+
     <copy file="${infra.solr.plugin.dir}/target/ambari-infra-solr-plugin-${project.version}.jar"
           toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
     <copy file="${infra.solr.plugin.dir}/target/libs/ambari-metrics-common-${ambari-metrics.version}.jar"
@@ -46,13 +64,13 @@
     <chmod file="${project.build.directory}/solr/bin/**" perm="755"/>
     <chmod file="${project.build.directory}/solr/server/scripts/**" perm="755"/>
 
-    <copy todir="${project.build.directory}" >
+    <copy todir="${project.build.directory}">
       <fileset dir="${jenkins.docker.folder}" includes="**"/>
     </copy>
-    <copy todir="${project.build.directory}/docker-infra-solr/solr" >
+    <copy todir="${project.build.directory}/docker-infra-solr/solr">
       <fileset dir="${project.build.directory}/solr" includes="**"/>
     </copy>
-    <copy todir="${project.build.directory}/docker-infra-solr/solr-client" >
+    <copy todir="${project.build.directory}/docker-infra-solr/solr-client">
       <fileset dir="${solr.client.dir}/target/package" includes="**"/>
     </copy>
   </target>

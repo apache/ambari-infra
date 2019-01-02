@@ -38,6 +38,9 @@
     <ambari-metrics.version>2.7.0.0.0</ambari-metrics.version>
     <skipSurefireTests>false</skipSurefireTests>
     <log4j2.version>2.10.0</log4j2.version>
+    <aws-sdk.version>1.11.445</aws-sdk.version>
+    <hadoop.version>2.7.3.2.6.5.3004-13</hadoop.version>
+    <hadoop3.version>3.1.1</hadoop3.version>
   </properties>
 
   <licenses>
