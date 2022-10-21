@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-github:git checkout -b ambari-25723
+github:
   description: "Apache Ambari Infra is a sub project of Apache Ambari."
   homepage: https://ambari.apache.org
   labels:
