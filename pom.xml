@@ -26,15 +26,15 @@
   <properties>
     <revision>3.0.0.0-SNAPSHOT</revision>
     <jdk.version>1.8</jdk.version>
-    <solr.version>7.6.0</solr.version>
+    <solr.version>8.11.2</solr.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <python.ver>python &gt;= 2.6</python.ver>
     <deb.python.ver>python (&gt;= 2.6)</deb.python.ver>
     <deb.architecture>amd64</deb.architecture>
     <deb.dependency.list>${deb.python.ver}</deb.dependency.list>
-    <hadoop.version>3.1.1</hadoop.version>
+    <hadoop.version>3.3.4</hadoop.version>
     <surefire.argLine>-Xmx1024m -Xms512m</surefire.argLine>
-    <zookeeper.version>3.4.6.2.3.0.0-2557</zookeeper.version>
+    <zookeeper.version>3.5.9</zookeeper.version>
     <ambari-metrics.version>2.7.0.0.0</ambari-metrics.version>
     <skipSurefireTests>false</skipSurefireTests>
     <log4j2.version>2.10.0</log4j2.version>
