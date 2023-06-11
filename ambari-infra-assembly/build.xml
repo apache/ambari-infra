@@ -31,12 +31,6 @@
       <fileset dir="${project.build.directory}/solr-${solr.version}"/>
     </move>
 
-    <delete
-      file="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/${common-fileupload.old.jar.name}"/>
-    <get src="${common-fileupload.location.url}" dest="target/${common-fileupload.jar.name}" usetimestamp="true"/>
-    <move file="target/${common-fileupload.jar.name}"
-          toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
-
     <copy file="${infra.solr.plugin.dir}/target/ambari-infra-solr-plugin-${project.version}.jar"
           toDir="${project.build.directory}/solr/server/solr-webapp/webapp/WEB-INF/lib/"/>
     <copy file="${infra.solr.plugin.dir}/target/libs/ambari-metrics-common-${ambari-metrics.version}.jar"
