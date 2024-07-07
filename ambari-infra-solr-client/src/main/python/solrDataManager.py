@@ -312,14 +312,14 @@ def ensure_hdfs_path(hdfs_kinit_command, hdfs_user, hdfs_path):
     result = call(hdfs_create_dir_command.split())
   except Exception as e:
     print()
-    logger.warn("Could not execute hdfs ensure dir command:\n%s", hdfs_create_dir_command)
-    logger.warn(str(e))
+    logger.warning("Could not execute hdfs ensure dir command:\n%s", hdfs_create_dir_command)
+    logger.warning(str(e))
     sys.exit()
 
   if result != 0:
     print()
-    logger.warn("Could not ensure HDFS dir command:\n%s", hdfs_create_dir_command)
-    logger.warn(str(err))
+    logger.warning("Could not ensure HDFS dir command:\n%s", hdfs_create_dir_command)
+    logger.warning(str(err))
     sys.exit()
 
 def get_working_dir(solr_url, collection):
@@ -362,7 +362,7 @@ def handle_unfinished_uploading(solr_kinit_command, hdfs_kinit_command, curl_pre
       elif command["upload"]["type"] == "local":
         upload_file_local(command["upload"]["command"], command["upload"]["upload_file_path"], command["upload"]["local_path"])
       else:
-        logger.warn("Unknown upload type: %s", command["upload"]["type"])
+        logger.warning("Unknown upload type: %s", command["upload"]["type"])
         sys.exit()
 
     if "delete" in list(command.keys()):
@@ -522,7 +522,7 @@ def upload_block(mode, solr_kinit_command, hdfs_kinit_command, curl_prefix, solr
   elif local_path:
     upload_file_local(upload_command, upload_file_path, local_path)
   else:
-    logger.warn("Unknown upload destination")
+    logger.warning("Unknown upload destination")
     sys.exit()
 
   delete_command = create_command_file(mode, False, working_dir, upload_file_path, solr_url, collection, filter_field,
@@ -566,7 +566,7 @@ def compress_file(working_dir, tmp_file_path, file_name, compression):
       gz.close()
       f.close()
   else:
-    logger.warn("Unknown compression type")
+    logger.warning("Unknown compression type")
     sys.exit()
 
   logger.info("Created data file %s", data_file_name)
@@ -623,7 +623,7 @@ def create_command_file(mode, upload, working_dir, upload_file_path, solr_url, c
       upload_command_data["local_path"] = local_path
       commands["upload"] = upload_command_data
     else:
-      logger.warn("Unknown upload destination")
+      logger.warning("Unknown upload destination")
       sys.exit()
 
     if mode == "save":
@@ -673,8 +673,8 @@ def upload_file_hdfs(hdfs_kinit_command, upload_command, upload_file_path, hdfs_
     hdfs_file_exists = (0 == call(hdfs_file_exists_command.split()))
   except Exception as e:
     print()
-    logger.warn("Could not execute command to check if file already exists on HDFS:\n%s", hdfs_file_exists_command)
-    logger.warn(str(e))
+    logger.warning("Could not execute command to check if file already exists on HDFS:\n%s", hdfs_file_exists_command)
+    logger.warning(str(e))
     sys.exit()
 
   if os.path.isfile(upload_file_path) and not hdfs_file_exists:
@@ -683,12 +683,12 @@ def upload_file_hdfs(hdfs_kinit_command, upload_command, upload_file_path, hdfs_
       result = call(upload_command.split())
     except Exception as e:
       print()
-      logger.warn("Could not execute command to upload file to HDFS:\n%s", upload_command)
-      logger.warn(str(e))
+      logger.warning("Could not execute command to upload file to HDFS:\n%s", upload_command)
+      logger.warning(str(e))
       sys.exit()
 
     if result != 0:
-      logger.warn("Could not upload file to HDFS with command:\n%s", upload_command)
+      logger.warning("Could not upload file to HDFS with command:\n%s", upload_command)
       sys.exit()
 
     logger.info("File %s was uploaded to hdfs %s", os.path.basename(upload_file_path), hdfs_path)
@@ -701,12 +701,12 @@ def upload_file_s3(upload_command, upload_file_path, bucket, key_prefix):
       result = call(upload_command.split())
     except Exception as e:
       print()
-      logger.warn("Could not execute command to upload file to S3:\n%s", upload_command)
-      logger.warn(str(e))
+      logger.warning("Could not execute command to upload file to S3:\n%s", upload_command)
+      logger.warning(str(e))
       sys.exit()
 
     if result != 0:
-      logger.warn("Could not upload file to S3 with command:\n%s", upload_command)
+      logger.warning("Could not upload file to S3 with command:\n%s", upload_command)
       sys.exit()
 
     logger.info("File %s was uploaded to s3 bucket '%s', key '%s'", os.path.basename(upload_file_path), bucket,
@@ -715,7 +715,7 @@ def upload_file_s3(upload_command, upload_file_path, bucket, key_prefix):
 
 def upload_file_local(upload_command, upload_file_path, local_path):
   if os.path.exists(local_path) and not os.path.isdir(local_path):
-    logger.warn("Local path %s exists, but not a directory, can not save there", local_path)
+    logger.warning("Local path %s exists, but not a directory, can not save there", local_path)
   if not os.path.isdir(local_path):
     os.mkdir(local_path)
     logger.debug("Directory %s was created", local_path)
@@ -726,8 +726,8 @@ def upload_file_local(upload_command, upload_file_path, local_path):
     logger.info("File %s was moved to local directory %s", os.path.basename(upload_file_path), local_path)
   except Exception as e:
     print()
-    logger.warn("Could not execute move command command:\n%s", upload_command)
-    logger.warn(str(e))
+    logger.warning("Could not execute move command command:\n%s", upload_command)
+    logger.warning(str(e))
     sys.exit()
 
 def upload_file_to_solr(solr_kinit_command, curl_prefix, upload_command, upload_file_path, collection):
@@ -759,23 +759,23 @@ def query_solr(solr_kinit_command, url, curl_command, action, data=None):
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
   except Exception as e:
     print()
-    logger.warn("Could not execute curl command:\n%s", ' '.join(cmd))
-    logger.warn(str(e))
+    logger.warning("Could not execute curl command:\n%s", ' '.join(cmd))
+    logger.warning(str(e))
     sys.exit()
 
   out, err = process.communicate()
   if process.returncode != 0:
     print()
-    logger.warn("Could not execute curl command:\n%s", ' '.join(cmd))
-    logger.warn(str(err))
+    logger.warning("Could not execute curl command:\n%s", ' '.join(cmd))
+    logger.warning(str(err))
     sys.exit()
 
   true = True # needed to be able to eval 'true' in the returned json
   rsp = eval(str(out))
   if rsp["responseHeader"]["status"] != 0:
     print()
-    logger.warn("Could not execute solr query:\n%s", unquote(url))
-    logger.warn(rsp["error"]["msg"])
+    logger.warning("Could not execute solr query:\n%s", unquote(url))
+    logger.warning(rsp["error"]["msg"])
     sys.exit()
 
   return rsp
@@ -786,13 +786,13 @@ def run_kinit(kinit_command, program):
     result = call(kinit_command.split())
   except Exception as e:
     print()
-    logger.warn("Could not execute %s kinit command:\n%s", program, kinit_command)
-    logger.warn(str(e))
+    logger.warning("Could not execute %s kinit command:\n%s", program, kinit_command)
+    logger.warning(str(e))
     sys.exit()
 
   if result != 0:
     print()
-    logger.warn("%s kinit command was not successful:\n%s", program, kinit_command)
+    logger.warning("%s kinit command was not successful:\n%s", program, kinit_command)
     sys.exit()
 
 if __name__ == '__main__':
@@ -815,7 +815,7 @@ if __name__ == '__main__':
            options.key_file_path, options.bucket, options.key_prefix, options.local_path, options.solr_output_collection,
            options.solr_output_url, options.exclude_fields, options.skip_date_usage)
     else:
-      logger.warn("Unknown mode: %s", options.mode)
+      logger.warning("Unknown mode: %s", options.mode)
 
     print(("--- %s seconds ---" % (time.time() - start_time)))
   except KeyboardInterrupt:
