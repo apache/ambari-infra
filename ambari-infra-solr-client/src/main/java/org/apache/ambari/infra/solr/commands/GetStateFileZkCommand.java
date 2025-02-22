@@ -20,10 +20,10 @@ package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.domain.AmbariSolrState;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
+import org.apache.zookeeper.ZooKeeper;
 
 public class GetStateFileZkCommand extends AbstractStateFileZkCommand {
+
   private String unsecureZnode;
 
   public GetStateFileZkCommand(int maxRetries, int interval, String unsecureZnode) {
@@ -32,11 +32,12 @@ public class GetStateFileZkCommand extends AbstractStateFileZkCommand {
   }
 
   @Override
-  protected AmbariSolrState executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected AmbariSolrState executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     AmbariSolrState result = AmbariSolrState.UNSECURE;
     String stateFile = String.format("%s/%s", unsecureZnode, AbstractStateFileZkCommand.STATE_FILE);
-    if (zkClient.exists(stateFile, true)) {
-      result = getStateFromJson(client, stateFile);
+    if (zk.exists(stateFile, false) != null) {
+      // Przekazujemy obiekt ZooKeeper, a nie client
+      result = getStateFromJson(zk, stateFile);
     }
     return result;
   }

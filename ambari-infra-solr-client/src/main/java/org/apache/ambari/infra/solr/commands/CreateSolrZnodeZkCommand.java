@@ -20,9 +20,10 @@ package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.AmbariSolrCloudClientException;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
 
 public class CreateSolrZnodeZkCommand extends AbstractZookeeperRetryCommand<String> {
 
@@ -31,12 +32,15 @@ public class CreateSolrZnodeZkCommand extends AbstractZookeeperRetryCommand<Stri
   }
 
   @Override
-  protected String executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected String executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     try {
-      zkClient.makePath(client.getZnode(), true);
+      // Sprawdzenie, czy znode już istnieje. Jeśli nie, utwórz go.
+      if (zk.exists(client.getZnode(), false) == null) {
+        zk.create(client.getZnode(), new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+      }
       return client.getZnode();
     } catch (KeeperException e) {
-      throw new AmbariSolrCloudClientException("Cannot create ZNode, check zookeeper servers are running (n+1/2), or zookeeper quorum has established or not.",e);
+      throw new AmbariSolrCloudClientException("Cannot create ZNode, check if ZooKeeper servers are running or if quorum is established.", e);
     }
   }
 }

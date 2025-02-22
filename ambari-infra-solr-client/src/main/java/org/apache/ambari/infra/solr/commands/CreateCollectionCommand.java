@@ -23,7 +23,7 @@ import org.apache.ambari.infra.solr.util.ShardUtils;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.response.CollectionAdminResponse;
 
-public class CreateCollectionCommand extends AbstractSolrRetryCommand<CollectionAdminRequest.Create ,String> {
+public class CreateCollectionCommand extends AbstractSolrRetryCommand<CollectionAdminRequest.Create, String> {
 
   public CreateCollectionCommand(int maxRetries, int interval) {
     super(maxRetries, interval);
@@ -38,7 +38,8 @@ public class CreateCollectionCommand extends AbstractSolrRetryCommand<Collection
   public CollectionAdminRequest.Create createRequest(AmbariSolrCloudClient client) {
     CollectionAdminRequest.Create request =
       CollectionAdminRequest.createCollection(client.getCollection(), client.getConfigSet(), client.getShards(), client.getReplication());
-    request.setMaxShardsPerNode(client.getMaxShardsPerNode());
+    // Metoda setMaxShardsPerNode została usunięta w nowej wersji Solr, dlatego linia poniżej została zakomentowana lub usunięta.
+    // request.setMaxShardsPerNode(client.getMaxShardsPerNode());
     if (client.isImplicitRouting()) {
       request.setRouterName(client.getRouterName());
       request.setRouterField(client.getRouterField());

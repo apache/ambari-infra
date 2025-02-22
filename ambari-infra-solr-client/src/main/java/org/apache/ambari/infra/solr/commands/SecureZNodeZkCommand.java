@@ -20,9 +20,8 @@ package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.util.AclUtils;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 
@@ -36,14 +35,13 @@ public class SecureZNodeZkCommand extends AbstractZookeeperRetryCommand<Boolean>
   }
 
   @Override
-  protected Boolean executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected Boolean executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     String zNode = client.getZnode();
     List<ACL> newAclList = new ArrayList<>();
     List<ACL> saslUserList = AclUtils.createAclListFromSaslUsers(client.getSaslUsers().split(","));
     newAclList.addAll(saslUserList);
     newAclList.add(new ACL(ZooDefs.Perms.READ, new Id("world", "anyone")));
-    AclUtils.setRecursivelyOn(client.getSolrZkClient().getSolrZooKeeper(), zNode, newAclList);
+    AclUtils.setRecursivelyOn(zk, zNode, newAclList);
     return true;
   }
-
 }

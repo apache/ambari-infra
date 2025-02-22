@@ -18,9 +18,10 @@
  */
 package org.apache.ambari.infra.solr.util;
 
-import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
@@ -64,22 +65,52 @@ public class AclUtils {
     return saslUserList;
   }
 
-  public static void setRecursivelyOn(SolrZooKeeper solrZooKeeper, String node, List<ACL> acls) throws KeeperException, InterruptedException {
-    setRecursivelyOn(solrZooKeeper, node, acls, new ArrayList<String>());
+  public static void setRecursivelyOn(ZooKeeper zk, String node, List<ACL> acls) throws KeeperException, InterruptedException {
+    setRecursivelyOn(zk, node, acls, new ArrayList<String>());
   }
 
-  public static void setRecursivelyOn(SolrZooKeeper solrZooKeeper, String node, List<ACL> acls, List<String> excludePaths)
-    throws KeeperException, InterruptedException {
+  public static void setRecursivelyOn(ZooKeeper zk, String node, List<ACL> acls, List<String> excludePaths)
+      throws KeeperException, InterruptedException {
     if (!excludePaths.contains(node)) {
-      List<ACL> newAcls = AclUtils.mergeAcls(solrZooKeeper.getACL(node, new Stat()), acls);
-      solrZooKeeper.setACL(node, newAcls, -1);
-      for (String child : solrZooKeeper.getChildren(node, null)) {
-        setRecursivelyOn(solrZooKeeper, path(node, child), acls, excludePaths);
+      Stat stat = new Stat();
+      List<ACL> currentAcls = zk.getACL(node, stat);
+      List<ACL> newAcls = mergeAcls(currentAcls, acls);
+      zk.setACL(node, newAcls, stat.getVersion());
+      for (String child : zk.getChildren(node, false)) {
+        setRecursivelyOn(zk, path(node, child), acls, excludePaths);
       }
     }
   }
 
   private static String path(String node, String child) {
     return node.endsWith("/") ? node + child : node + "/" + child;
+  }
+  
+  /**
+   * Rekurencyjnie tworzy całą ścieżkę w ZooKeeperze.
+   *
+   * @param zk   instancja ZooKeeper
+   * @param path pełna ścieżka, którą należy utworzyć
+   * @throws KeeperException
+   * @throws InterruptedException
+   */
+  public static void createPath(ZooKeeper zk, String path) throws KeeperException, InterruptedException {
+    String[] parts = path.split("/");
+    StringBuilder currentPath = new StringBuilder();
+    // Jeśli ścieżka zaczyna się od "/", dodajemy ją
+    if (path.startsWith("/")) {
+      currentPath.append("/");
+    }
+    for (String part : parts) {
+      if (part.isEmpty()) continue;
+      if (currentPath.length() > 1 || (currentPath.length() == 1 && !currentPath.toString().equals("/"))) {
+        currentPath.append("/");
+      }
+      currentPath.append(part);
+      String currentPathStr = currentPath.toString();
+      if (zk.exists(currentPathStr, false) == null) {
+        zk.create(currentPathStr, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+      }
+    }
   }
 }

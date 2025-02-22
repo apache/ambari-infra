@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,8 +27,7 @@ import java.util.Optional;
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.domain.ZookeeperClient;
 import org.apache.commons.io.FileUtils;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
+import org.apache.zookeeper.ZooKeeper;
 
 public class SetAutoScalingZkCommand extends AbstractZookeeperRetryCommand<String> {
   private static final String AUTO_SCALING_JSON = "/autoscaling.json";
@@ -41,7 +40,7 @@ public class SetAutoScalingZkCommand extends AbstractZookeeperRetryCommand<Strin
   }
 
   @Override
-  protected String executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected String executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     if (isBlank(autoScalingJsonLocation))
       return "";
 
@@ -54,7 +53,8 @@ public class SetAutoScalingZkCommand extends AbstractZookeeperRetryCommand<Strin
       return "";
 
     String zFilePath = client.getZnode() + AUTO_SCALING_JSON;
-    ZookeeperClient zookeeperClient = new ZookeeperClient(zkClient);
+    // Używamy ZookeeperClient, który teraz przyjmuje instancję ZooKeeper
+    ZookeeperClient zookeeperClient = new ZookeeperClient(zk);
     Optional<String> fileContent = zookeeperClient.getFileContent(zFilePath);
     if (!fileContent.isPresent() || !contentToUpload.equals(fileContent.get()))
       zookeeperClient.putFileContent(zFilePath, contentToUpload);

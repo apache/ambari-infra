@@ -24,9 +24,9 @@ import java.util.Map;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.domain.AmbariSolrState;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,35 +43,36 @@ public class UpdateStateFileZkCommand extends AbstractStateFileZkCommand {
   }
 
   @Override
-  protected AmbariSolrState executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected AmbariSolrState executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     boolean secure = client.isSecure();
     String stateFile = String.format("%s/%s", unsecureZnode, AbstractStateFileZkCommand.STATE_FILE);
     AmbariSolrState result;
     if (secure) {
       logger.info("Update state file in secure mode.");
-      updateStateFile(client, zkClient, AmbariSolrState.SECURE, stateFile);
+      updateStateFile(client, zk, AmbariSolrState.SECURE, stateFile);
       result = AmbariSolrState.SECURE;
     } else {
       logger.info("Update state file in unsecure mode.");
-      updateStateFile(client, zkClient, AmbariSolrState.UNSECURE, stateFile);
+      updateStateFile(client, zk, AmbariSolrState.UNSECURE, stateFile);
       result = AmbariSolrState.UNSECURE;
     }
     return result;
   }
 
-  private void updateStateFile(AmbariSolrCloudClient client, SolrZkClient zkClient, AmbariSolrState stateToUpdate,
+  private void updateStateFile(AmbariSolrCloudClient client, ZooKeeper zk, AmbariSolrState stateToUpdate,
                                String stateFile) throws Exception {
-    if (!zkClient.exists(stateFile, true)) {
-      logger.info("State file does not exits. Initializing it as '{}'", stateToUpdate);
-      zkClient.create(stateFile, createStateJson(stateToUpdate).getBytes(StandardCharsets.UTF_8),
-        CreateMode.PERSISTENT, true);
+    if (zk.exists(stateFile, false) == null) {
+      logger.info("State file does not exist. Initializing it as '{}'", stateToUpdate);
+      zk.create(stateFile, createStateJson(stateToUpdate).getBytes(StandardCharsets.UTF_8),
+          ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
     } else {
-      AmbariSolrState stateOnSecure = getStateFromJson(client, stateFile);
+      // Przekazujemy obiekt ZooKeeper zamiast client
+      AmbariSolrState stateOnSecure = getStateFromJson(zk, stateFile);
       if (stateToUpdate.equals(stateOnSecure)) {
         logger.info("State file is in '{}' mode. No update.", stateOnSecure);
       } else {
         logger.info("State file is in '{}' mode. Updating it to '{}'", stateOnSecure, stateToUpdate);
-        zkClient.setData(stateFile, createStateJson(stateToUpdate).getBytes(StandardCharsets.UTF_8), true);
+        zk.setData(stateFile, createStateJson(stateToUpdate).getBytes(StandardCharsets.UTF_8), -1);
       }
     }
   }

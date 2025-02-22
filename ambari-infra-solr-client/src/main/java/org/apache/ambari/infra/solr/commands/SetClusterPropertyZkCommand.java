@@ -18,23 +18,48 @@
  */
 package org.apache.ambari.infra.solr.commands;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.ClusterProperties;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 
-public class SetClusterPropertyZkCommand extends AbstractZookeeperRetryCommand<String>{
+import java.util.HashMap;
+import java.util.Map;
+
+public class SetClusterPropertyZkCommand extends AbstractZookeeperRetryCommand<String> {
 
   public SetClusterPropertyZkCommand(int maxRetries, int interval) {
     super(maxRetries, interval);
   }
 
   @Override
-  protected String executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected String executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     String propertyName = client.getPropName();
     String propertyValue = client.getPropValue();
-    ClusterProperties clusterProperties = new ClusterProperties(zkClient);
-    clusterProperties.setClusterProperty(propertyName, propertyValue);
+    String clusterPropsPath = client.getZnode() + "/clusterprops.json";
+
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, Object> clusterProps;
+    Stat stat = zk.exists(clusterPropsPath, false);
+    if (stat != null) {
+      byte[] data = zk.getData(clusterPropsPath, false, null);
+      clusterProps = mapper.readValue(data, new TypeReference<Map<String, Object>>() {});
+    } else {
+      clusterProps = new HashMap<>();
+    }
+
+    // Ustawiamy właściwość
+    clusterProps.put(propertyName, propertyValue);
+    byte[] newData = mapper.writeValueAsBytes(clusterProps);
+
+    if (stat != null) {
+      zk.setData(clusterPropsPath, newData, stat.getVersion());
+    } else {
+      zk.create(clusterPropsPath, newData, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+    }
     return propertyValue;
   }
 }

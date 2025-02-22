@@ -18,12 +18,12 @@
  */
 package org.apache.ambari.infra.solr.commands;
 
-import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.domain.AmbariSolrState;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.zookeeper.ZooKeeper;
 
-public abstract class AbstractStateFileZkCommand extends AbstractZookeeperRetryCommand<AmbariSolrState>{
+public abstract class AbstractStateFileZkCommand extends AbstractZookeeperRetryCommand<AmbariSolrState> {
 
   public static final String STATE_FILE = "ambari-solr-state.json";
   public static final String STATE_FIELD = "ambari_solr_security_state";
@@ -32,8 +32,16 @@ public abstract class AbstractStateFileZkCommand extends AbstractZookeeperRetryC
     super(maxRetries, interval);
   }
 
-  public AmbariSolrState getStateFromJson(AmbariSolrCloudClient client, String fileName) throws Exception {
-    byte[] data = client.getSolrZkClient().getData(fileName, null, null, true);
+  /**
+   * Pobiera stan (w formacie JSON) z ZooKeepera przy użyciu podanej ścieżki i parsuje go do enum AmbariSolrState.
+   *
+   * @param zk       instancja ZooKeeper
+   * @param fileName ścieżka do pliku stanu
+   * @return AmbariSolrState odczytany z pliku
+   * @throws Exception w przypadku błędów odczytu lub parsowania
+   */
+  public AmbariSolrState getStateFromJson(ZooKeeper zk, String fileName) throws Exception {
+    byte[] data = zk.getData(fileName, false, null);
     String input = new String(data);
     ObjectMapper mapper = new ObjectMapper();
     JsonNode rootNode = mapper.readValue(input.getBytes(), JsonNode.class);

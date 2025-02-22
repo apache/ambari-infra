@@ -29,11 +29,9 @@ import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.common.cloud.DocCollection;
 import org.apache.solr.common.cloud.Replica;
 import org.apache.solr.common.cloud.Slice;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
-import org.apache.solr.common.cloud.ZkStateReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.zookeeper.ZooKeeper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -54,7 +52,7 @@ public class DumpCollectionsCommand extends AbstractZookeeperRetryCommand<String
   }
 
   @Override
-  protected String executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected String executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     Map<String, SolrCollection> collectionMap = new HashMap<>();
     if (!this.collections.isEmpty()) {
       for (String collection : this.collections) {
@@ -85,14 +83,7 @@ public class DumpCollectionsCommand extends AbstractZookeeperRetryCommand<String
               && replica.getProperties().get("leader") != null && "true".equals(replica.getProperties().get("leader"))) {
               String coreName = replica.getCoreName();
               String hostName = getHostFromNodeName(replica.getNodeName());
-              if (leaderHostCoreMap.containsKey(hostName)) {
-                List<String> coresList = leaderHostCoreMap.get(hostName);
-                coresList.add(coreName);
-              } else {
-                List<String> coreList = new ArrayList<>();
-                coreList.add(coreName);
-                leaderHostCoreMap.put(hostName, coreList);
-              }
+              leaderHostCoreMap.computeIfAbsent(hostName, k -> new ArrayList<>()).add(coreName);
               Map<String, String> properties = new HashMap<>();
               properties.put("name", coreName);
               properties.put("coreNodeName", replica.getName());
@@ -119,8 +110,7 @@ public class DumpCollectionsCommand extends AbstractZookeeperRetryCommand<String
       }
     }
     ObjectMapper objectMapper = new ObjectMapper();
-    final ObjectWriter objectWriter = objectMapper
-      .writerWithDefaultPrettyPrinter();
+    final ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
     File file = new File(client.getOutput());
     if (!file.exists()) {
       file.createNewFile();
@@ -143,8 +133,8 @@ public class DumpCollectionsCommand extends AbstractZookeeperRetryCommand<String
   }
 
   private Collection<Slice> getSlices(CloudSolrClient solrClient, String collection) {
-    ZkStateReader reader = solrClient.getZkStateReader();
-    DocCollection docCollection = reader.getClusterState().getCollection(collection);
+    // Zamiast getZkStateReader() używamy ClusterStateProvider dostępnego w CloudSolrClient
+    DocCollection docCollection = solrClient.getClusterStateProvider().getClusterState().getCollection(collection);
     return docCollection.getSlices();
   }
 

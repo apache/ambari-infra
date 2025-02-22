@@ -20,14 +20,8 @@ package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.util.AclUtils;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.data.ACL;
-import org.apache.zookeeper.data.Id;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.zookeeper.ZooKeeper;
 
 public class UnsecureZNodeZkCommand extends AbstractZookeeperRetryCommand<Boolean> {
 
@@ -36,9 +30,9 @@ public class UnsecureZNodeZkCommand extends AbstractZookeeperRetryCommand<Boolea
   }
 
   @Override
-  protected Boolean executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected Boolean executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     String zNode = client.getZnode();
-    AclUtils.setRecursivelyOn(client.getSolrZkClient().getSolrZooKeeper(), zNode, ZooDefs.Ids.OPEN_ACL_UNSAFE);
+    AclUtils.setRecursivelyOn(zk, zNode, ZooDefs.Ids.OPEN_ACL_UNSAFE);
     return true;
   }
 }

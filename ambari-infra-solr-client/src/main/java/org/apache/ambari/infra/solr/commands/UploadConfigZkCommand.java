@@ -18,12 +18,14 @@
  */
 package org.apache.ambari.infra.solr.commands;
 
-import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.ZkConfigManager;
-
-import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
 
 public class UploadConfigZkCommand extends AbstractZookeeperConfigCommand<String> {
 
@@ -32,10 +34,37 @@ public class UploadConfigZkCommand extends AbstractZookeeperConfigCommand<String
   }
 
   @Override
-  protected String executeZkConfigCommand(ZkConfigManager zkConfigManager, AmbariSolrCloudClient client) throws Exception {
+  protected String executeZkConfigCommand(ZooKeeper zk, AmbariSolrCloudClient client) throws Exception {
     Path configDir = Paths.get(client.getConfigDir());
     String configSet = client.getConfigSet();
-    zkConfigManager.uploadConfigDir(configDir, configSet);
+    String zkBasePath = "/configs/" + configSet;
+    uploadDirectory(zk, configDir, zkBasePath);
     return configSet;
+  }
+
+  private void uploadDirectory(ZooKeeper zk, Path localDir, String zkPath) throws Exception {
+    // Jeśli węzeł jeszcze nie istnieje, utwórz go jako katalog (pusty bajt[] jako dane)
+    if (zk.exists(zkPath, false) == null) {
+      zk.create(zkPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+    }
+    // Dla każdego elementu w lokalnym katalogu:
+    Files.list(localDir).forEach(path -> {
+      String childZkPath = zkPath + "/" + path.getFileName().toString();
+      try {
+        if (Files.isDirectory(path)) {
+          // Rekurencyjne przetwarzanie katalogu
+          uploadDirectory(zk, path, childZkPath);
+        } else {
+          byte[] content = Files.readAllBytes(path);
+          if (zk.exists(childZkPath, false) == null) {
+            zk.create(childZkPath, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+          } else {
+            zk.setData(childZkPath, content, -1);
+          }
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Error uploading file: " + path, e);
+      }
+    });
   }
 }

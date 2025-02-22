@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder;
-import org.apache.solr.common.cloud.SolrZkClient;
 
 public class AmbariSolrCloudClientBuilder {
   private static final String KEYSTORE_LOCATION_ARG = "javax.net.ssl.keyStore";
@@ -49,7 +48,7 @@ public class AmbariSolrCloudClientBuilder {
   String routerName = "implicit";
   String routerField = "_router_field_";
   CloudSolrClient solrCloudClient;
-  SolrZkClient solrZkClient;
+  // Usunięto pole solrZkClient, gdyż SolrZkClient nie jest już dostępny
   boolean implicitRouting;
   String jaasFile;
   String znode;
@@ -140,10 +139,7 @@ public class AmbariSolrCloudClientBuilder {
     return this;
   }
 
-  public AmbariSolrCloudClientBuilder withSolrZkClient(int zkClientTimeout, int zkClientConnectTimeout) {
-    this.solrZkClient = new SolrZkClient(this.zkConnectString, zkClientTimeout, zkClientConnectTimeout);
-    return this;
-  }
+  // Usunięto metodę withSolrZkClient, gdyż SolrZkClient nie jest już dostępny.
 
   public AmbariSolrCloudClientBuilder withKeyStoreLocation(String keyStoreLocation) {
     if (keyStoreLocation != null) {

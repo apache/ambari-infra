@@ -72,7 +72,7 @@ public class AmbariSolrCloudCLI {
       + "\n./solrCloudCli.sh --check-znode -z host1:2181,host2:2181 -zn /ambari-solr"
       + "\n./solrCloudCli.sh --delete-znode -z host1:2181,host2:2181 -zn /ambari-solr"
       + "\n./solrCloudCli.sh --transfer-znode -z host1:2181,host2:2181 -cps /ambari-solr -cpd /ambari-solr-backup"
-      + "\n./solrCloudCli.sh --cluster-prop -z host1:2181,host2:2181/ambari-solr -cpn urlScheme -cpn http"
+      + "\n./solrCloudCli.sh --cluster-prop -z host1:2181,host2:2181/ambari-solr -cpn urlScheme -cpv http"
       + "\n./solrCloudCli.sh --secure-znode -z host1:2181,host2:2181 -zn /ambari-solr -su logsearch,atlas,ranger --jaas-file /etc/myconf/jaas_file"
       + "\n./solrCloudCli.sh --unsecure-znode -z host1:2181,host2:2181 -zn /ambari-solr --jaas-file /etc/myconf/jaas_file"
       + "\n./solrCloudCli.sh --secure-solr-znode -z host1:2181,host2:2181 -zn /ambari-solr -su logsearch,atlas,ranger --jaas-file /etc/myconf/jaas_file"
@@ -564,7 +564,7 @@ public class AmbariSolrCloudCLI {
         .withRouterField(routerField)
         .withJaasFile(jaasFile) // call before creating SolrClient
         .isImplicitRouting(implicitRouting)
-        .withSolrZkClient(ZK_CLIENT_TIMEOUT, ZK_CLIENT_CONNECT_TIMEOUT)
+        // Usunięto wywołanie withSolrZkClient(...)
         .withKeyStoreLocation(keyStoreLocation)
         .withKeyStorePassword(keyStorePassword)
         .withKeyStoreType(keyStoreType)
@@ -647,6 +647,7 @@ public class AmbariSolrCloudCLI {
         case SECURE_SOLR_ZNODE_COMMAND:
           solrCloudClient = clientBuilder.build();
           solrCloudClient.secureSolrZnode();
+          break;
         case REMOVE_ADMIN_HANDLERS:
           solrCloudClient = clientBuilder.build();
           solrCloudClient.removeAdminHandlerFromCollectionConfig();
@@ -676,9 +677,7 @@ public class AmbariSolrCloudCLI {
         CMD_LINE_SYNTAX, options);
       exit(1, e.getMessage());
     } finally {
-      if (solrCloudClient != null && solrCloudClient.getSolrZkClient() != null) {
-        solrCloudClient.getSolrZkClient().close();
-      }
+      // Usunięto wywołanie getSolrZkClient() z zamknięcia klienta
     }
     exit(0, null);
   }

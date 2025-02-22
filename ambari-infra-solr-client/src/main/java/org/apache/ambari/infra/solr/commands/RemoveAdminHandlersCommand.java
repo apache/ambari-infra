@@ -19,9 +19,9 @@
 package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
+import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
+import java.nio.charset.StandardCharsets;
 
 public class RemoveAdminHandlersCommand extends AbstractZookeeperRetryCommand<Boolean> {
 
@@ -30,15 +30,17 @@ public class RemoveAdminHandlersCommand extends AbstractZookeeperRetryCommand<Bo
   }
 
   @Override
-  protected Boolean executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected Boolean executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     String solrConfigXmlPath = String.format("/configs/%s/solrconfig.xml", client.getCollection());
-    if (zkClient.exists(solrConfigXmlPath, true)) {
+    if (zk.exists(solrConfigXmlPath, false) != null) {
       Stat stat = new Stat();
-      byte[] solrConfigXmlBytes = zkClient.getData(solrConfigXmlPath, null, stat, true);
-      String solrConfigStr = new String(solrConfigXmlBytes);
+      byte[] solrConfigXmlBytes = zk.getData(solrConfigXmlPath, false, stat);
+      String solrConfigStr = new String(solrConfigXmlBytes, StandardCharsets.UTF_8);
       if (solrConfigStr.contains("class=\"solr.admin.AdminHandlers\"")) {
-        byte[] newSolrConfigXmlBytes = new String(solrConfigXmlBytes).replaceAll("(?s)<requestHandler name=\"/admin/\".*?class=\"solr.admin.AdminHandlers\" />", "").getBytes();
-        zkClient.setData(solrConfigXmlPath, newSolrConfigXmlBytes, stat.getVersion() + 1, true);
+        String newSolrConfigStr = solrConfigStr.replaceAll("(?s)<requestHandler name=\"/admin/\".*?class=\"solr.admin.AdminHandlers\" />", "");
+        byte[] newSolrConfigXmlBytes = newSolrConfigStr.getBytes(StandardCharsets.UTF_8);
+        // Używamy wersji pobranej ze stat
+        zk.setData(solrConfigXmlPath, newSolrConfigXmlBytes, stat.getVersion());
       }
     }
     return true;

@@ -1,18 +1,18 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
+ * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * regarding copyright ownership.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
+ * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
@@ -44,12 +44,11 @@ import org.apache.ambari.infra.solr.commands.UploadConfigZkCommand;
 import org.apache.ambari.infra.solr.util.ShardUtils;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.common.cloud.Slice;
-import org.apache.solr.common.cloud.SolrZkClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Client for communicate with Solr (and Zookeeper)
+ * Client do komunikacji z Solr (oraz ZooKeeper).
  */
 public class AmbariSolrCloudClient {
 
@@ -64,7 +63,7 @@ public class AmbariSolrCloudClient {
   private final int retryTimes;
   private final int interval;
   private final CloudSolrClient solrCloudClient;
-  private final SolrZkClient solrZkClient;
+  // Usunięto pole solrZkClient, ponieważ SolrZkClient nie jest już dostępny w Solr 9.8.0
   private final int maxShardsPerNode;
   private final String routerName;
   private final String routerField;
@@ -94,7 +93,7 @@ public class AmbariSolrCloudClient {
     this.interval = builder.interval;
     this.jaasFile = builder.jaasFile;
     this.solrCloudClient = builder.solrCloudClient;
-    this.solrZkClient = builder.solrZkClient;
+    // Usunięto inicjalizację solrZkClient
     this.maxShardsPerNode = builder.maxShardsPerNode;
     this.routerName = builder.routerName;
     this.routerField = builder.routerField;
@@ -114,22 +113,22 @@ public class AmbariSolrCloudClient {
   }
 
   /**
-   * Get Solr collections
+   * Pobierz listę kolekcji Solr.
    */
   public List<String> listCollections() throws Exception {
     return new ListCollectionCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Create Solr collection if exists
+   * Utwórz kolekcję Solr, jeśli nie istnieje.
    */
   public String createCollection() throws Exception {
     List<String> collections = listCollections();
     if (!collections.contains(getCollection())) {
       String collection = new CreateCollectionCommand(getRetryTimes(), getInterval()).run(this);
-      logger.info("Collection '{}' creation request sent.", collection);
+      logger.info("Wysłano żądanie utworzenia kolekcji '{}'.", collection);
     } else {
-      logger.info("Collection '{}' already exits.", getCollection());
+      logger.info("Kolekcja '{}' już istnieje.", getCollection());
       if (this.isImplicitRouting()) {
         createShard(null);
       }
@@ -137,116 +136,118 @@ public class AmbariSolrCloudClient {
     return getCollection();
   }
 
+  /**
+   * Wypisz dane kolekcji.
+   */
   public String outputCollectionData() throws Exception {
     List<String> collections = listCollections();
     String result = new DumpCollectionsCommand(getRetryTimes(), getInterval(), collections).run(this);
-    logger.info("Dump collections response: {}", result);
+    logger.info("Odpowiedź dump kolekcji: {}", result);
     return result;
   }
 
   /**
-   * Set cluster property in clusterprops.json.
+   * Ustaw właściwość klastra w clusterprops.json.
    */
   public void setClusterProp() throws Exception {
-    logger.info("Set cluster prop: '{}'", this.getPropName());
+    logger.info("Ustaw właściwość klastra: '{}'", this.getPropName());
     String newPropValue = new SetClusterPropertyZkCommand(getRetryTimes(), getInterval()).run(this);
-    logger.info("Set cluster prop '{}' successfully to '{}'", this.getPropName(), newPropValue);
+    logger.info("Właściwość klastra '{}' została ustawiona na '{}'", this.getPropName(), newPropValue);
   }
 
   /**
-   * Create a znode only if it does not exist. Return 0 code if it exists.
+   * Utwórz znode, jeśli jeszcze nie istnieje. Zwraca 0, jeśli już istnieje.
    */
   public void createZnode() throws Exception {
     boolean znodeExists = isZnodeExists(this.znode);
     if (znodeExists) {
-      logger.info("Znode '{}' already exists.", this.znode);
+      logger.info("Znode '{}' już istnieje.", this.znode);
     } else {
-      logger.info("Znode '{}' does not exist. Creating...", this.znode);
+      logger.info("Znode '{}' nie istnieje. Tworzenie...", this.znode);
       String newZnode = new CreateSolrZnodeZkCommand(getRetryTimes(), getInterval()).run(this);
-      logger.info("Znode '{}' is created successfully.", newZnode);
+      logger.info("Znode '{}' został utworzony pomyślnie.", newZnode);
     }
   }
 
   /**
-   * Check znode exists or not based on the zookeeper connect string.
-   * E.g.: localhost:2181 and znode: /ambari-solr, checks existance of localhost:2181/ambari-solr
+   * Sprawdź, czy znode istnieje.
    */
   public boolean isZnodeExists(String znode) throws Exception {
-    logger.info("Check '{}' znode exists or not", znode);
+    logger.info("Sprawdzenie, czy znode '{}' istnieje.", znode);
     boolean result = new CheckZnodeZkCommand(getRetryTimes(), getInterval(), znode).run(this);
     if (result) {
-      logger.info("'{}' znode exists", znode);
+      logger.info("Znode '{}' istnieje.", znode);
     } else {
-      logger.info("'{}' znode does not exist", znode);
+      logger.info("Znode '{}' nie istnieje.", znode);
     }
     return result;
   }
 
+  /**
+   * Skonfiguruj wtyczkę Kerberos w security.json.
+   */
   public void setupKerberosPlugin() throws Exception {
-    logger.info("Setup kerberos plugin in security.json");
+    logger.info("Konfiguracja wtyczki Kerberos w security.json");
     new EnableKerberosPluginSolrZkCommand(getRetryTimes(), getInterval()).run(this);
-    logger.info("KerberosPlugin is set in security.json");
+    logger.info("Wtyczka Kerberos została ustawiona w security.json");
   }
 
   /**
-   * Secure solr znode
+   * Zabezpiecz znode Solr.
    */
   public void secureSolrZnode() throws Exception {
     new SecureSolrZNodeZkCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Secure znode
+   * Zabezpiecz znode.
    */
   public void secureZnode() throws Exception {
     new SecureZNodeZkCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Unsecure znode
+   * Wyłącz zabezpieczenia dla znode.
    */
   public void unsecureZnode() throws Exception {
-    logger.info("Disable security for znode - ", this.getZnode());
+    logger.info("Wyłączanie zabezpieczeń dla znode - {}", this.getZnode());
     new UnsecureZNodeZkCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Upload config set to zookeeper
+   * Prześlij konfigurację do ZooKeepera.
    */
   public String uploadConfiguration() throws Exception {
     String configSet = new UploadConfigZkCommand(getRetryTimes(), getInterval()).run(this);
-    logger.info("'{}' is uploaded to zookeeper.", configSet);
+    logger.info("Konfiguracja '{}' została przesłana do ZooKeepera.", configSet);
     return configSet;
   }
 
   /**
-   * Download config set from zookeeper
+   * Pobierz konfigurację z ZooKeepera.
    */
   public String downloadConfiguration() throws Exception {
     String configDir = new DownloadConfigZkCommand(getRetryTimes(), getInterval()).run(this);
-    logger.info("Config set is download from zookeeper. ({})", configDir);
+    logger.info("Konfiguracja została pobrana z ZooKeepera. ({})", configDir);
     return configDir;
   }
 
   /**
-   * Get configuration if exists in zookeeper
+   * Sprawdź, czy konfiguracja istnieje w ZooKeeperze.
    */
   public boolean configurationExists() throws Exception {
     boolean configExits = new CheckConfigZkCommand(getRetryTimes(), getInterval()).run(this);
     if (configExits) {
-      logger.info("Config {} exits", configSet);
+      logger.info("Konfiguracja {} istnieje", configSet);
     } else {
-      logger.info("Configuration '{}' does not exist", configSet);
+      logger.info("Konfiguracja '{}' nie istnieje", configSet);
     }
     return configExits;
   }
 
   /**
-   * Create shard in collection - create a new one if shard name specified, if
-   * not create based on the number of shards logic (with shard_# suffix)
-   * 
-   * @param shard
-   *          name of the created shard
+   * Utwórz shard w kolekcji. Jeśli nazwa sharda jest podana, utworzy ten shard, 
+   * w przeciwnym razie utworzy shardy według logiki (nazwa shard_#).
    */
   public Collection<String> createShard(String shard) throws Exception {
     Collection<String> existingShards = getShardNames();
@@ -258,7 +259,7 @@ public class AmbariSolrCloudClient {
       for (String shardName : shardList) {
         if (!existingShards.contains(shardName)) {
           new CreateShardCommand(shardName, getRetryTimes(), getInterval()).run(this);
-          logger.info("Adding new shard to collection request sent ('{}': {})", getCollection(), shardName);
+          logger.info("Wysłano żądanie dodania nowego sharda ('{}': {})", getCollection(), shardName);
           existingShards.add(shardName);
         }
       }
@@ -267,7 +268,7 @@ public class AmbariSolrCloudClient {
   }
 
   /**
-   * Get shard names
+   * Pobierz nazwy shardów.
    */
   public Collection<String> getShardNames() throws Exception {
     Collection<Slice> slices = new GetShardsCommand(getRetryTimes(), getInterval()).run(this);
@@ -275,33 +276,36 @@ public class AmbariSolrCloudClient {
   }
 
   /**
-   * Get Solr Hosts
+   * Pobierz hosty Solr.
    */
   public Collection<String> getSolrHosts() throws Exception {
     return new GetSolrHostsCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Remove solr.admin.AdminHandlers requestHandler from solrconfi.xml
+   * Usuń requestHandler solr.admin.AdminHandlers z pliku solrconfig.xml.
    */
   public boolean removeAdminHandlerFromCollectionConfig() throws Exception {
     return new RemoveAdminHandlersCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Transfer znode data (cannot be both scr and dest local)
+   * Przenieś dane znode (nie można mieć jednocześnie źródła i celu lokalnego).
    */
   public boolean transferZnode() throws Exception {
     return new TransferZnodeZkCommand(getRetryTimes(), getInterval()).run(this);
   }
 
   /**
-   * Delete znode path (and all sub nodes)
+   * Usuń ścieżkę znode (wraz z podwęzłami).
    */
   public boolean deleteZnode() throws Exception {
     return new DeleteZnodeZkCommand(getRetryTimes(), getInterval()).run(this);
   }
 
+  /**
+   * Ustaw auto-scaling.
+   */
   public void setAutoScaling() throws Exception {
     new SetAutoScalingZkCommand(getRetryTimes(), getInterval(), autoScalingJsonLocation).run(this);
   }
@@ -342,9 +346,7 @@ public class AmbariSolrCloudClient {
     return solrCloudClient;
   }
 
-  public SolrZkClient getSolrZkClient() {
-    return solrZkClient;
-  }
+  // Metoda getSolrZkClient została usunięta, gdyż SolrZkClient nie jest już dostępny.
 
   public int getMaxShardsPerNode() {
     return maxShardsPerNode;

@@ -19,22 +19,39 @@
 package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
+import org.apache.zookeeper.ZooKeeper;
 
+/**
+ * Abstrakcyjna klasa wykonująca polecenia na ZooKeeperze z mechanizmem ponawiania.
+ * 
+ * Wcześniej wykorzystywano klasy SolrZkClient i SolrZooKeeper, które zostały
+ * usunięte w Solr 9.8.0. Teraz tworzymy połączenie do ZooKeepera bezpośrednio,
+ * korzystając z łańcucha połączeniowego dostępnego w AmbariSolrCloudClient.
+ */
 public abstract class AbstractZookeeperRetryCommand<RESPONSE> extends AbstractRetryCommand<RESPONSE> {
 
   public AbstractZookeeperRetryCommand(int maxRetries, int interval) {
     super(maxRetries, interval);
   }
 
-  protected abstract RESPONSE executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper)
+  /**
+   * Metoda abstrakcyjna do wykonania operacji na ZooKeeperze.
+   *
+   * @param client odniesienie do AmbariSolrCloudClient
+   * @param zk instancja ZooKeeper utworzona na podstawie zkConnectString
+   * @return wynik operacji
+   * @throws Exception w przypadku błędów
+   */
+  protected abstract RESPONSE executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk)
     throws Exception;
 
   @Override
   public RESPONSE createAndProcessRequest(AmbariSolrCloudClient client) throws Exception {
-    SolrZkClient zkClient = client.getSolrZkClient();
-    SolrZooKeeper solrZooKeeper = zkClient.getSolrZooKeeper();
-    return executeZkCommand(client, zkClient, solrZooKeeper);
+    // Używamy zkConnectString z klienta do utworzenia połączenia do ZooKeepera.
+    int sessionTimeout = 30000; // Timeout sesji (w ms) – można uczynić konfigurowalnym.
+    ZooKeeper zk = new ZooKeeper(client.getZkConnectString(), sessionTimeout, event -> {
+      // Można tutaj dodać obsługę zdarzeń ZooKeepera, jeśli jest potrzebna.
+    });
+    return executeZkCommand(client, zk);
   }
 }

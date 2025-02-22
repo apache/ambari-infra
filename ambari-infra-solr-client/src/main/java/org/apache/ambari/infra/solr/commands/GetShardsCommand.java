@@ -19,8 +19,9 @@
 package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.common.cloud.DocCollection;
 import org.apache.solr.common.cloud.Slice;
-import org.apache.solr.common.cloud.ZkStateReader;
 
 import java.util.Collection;
 
@@ -31,9 +32,9 @@ public class GetShardsCommand extends AbstractRetryCommand<Collection<Slice>> {
   }
 
   @Override
-  public Collection<Slice> createAndProcessRequest(AmbariSolrCloudClient solrCloudClient) throws Exception {
-    ZkStateReader zkReader = new ZkStateReader(solrCloudClient.getSolrZkClient());
-    zkReader.createClusterStateWatchersAndUpdate();
-    return zkReader.getClusterState().getCollection(solrCloudClient.getCollection()).getSlices();
+  public Collection<Slice> createAndProcessRequest(AmbariSolrCloudClient solrClient) throws Exception {
+    CloudSolrClient cloudSolrClient = solrClient.getSolrCloudClient();
+    DocCollection docCollection = cloudSolrClient.getClusterStateProvider().getClusterState().getCollection(solrClient.getCollection());
+    return docCollection.getSlices();
   }
 }

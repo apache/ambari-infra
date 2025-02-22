@@ -23,28 +23,28 @@ import static org.apache.zookeeper.CreateMode.PERSISTENT;
 
 import java.util.Optional;
 
-import org.apache.solr.common.cloud.SolrZkClient;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
 
 public class ZookeeperClient {
-  private final SolrZkClient zkClient;
+  private final ZooKeeper zk;
 
-  public ZookeeperClient(SolrZkClient zkClient) {
-    this.zkClient = zkClient;
+  public ZookeeperClient(ZooKeeper zk) {
+    this.zk = zk;
   }
 
   public void putFileContent(String fileName, String content) throws Exception {
-    if (zkClient.exists(fileName, true)) {
-      zkClient.setData(fileName, content.getBytes(UTF_8), true);
+    if (zk.exists(fileName, false) != null) {
+      zk.setData(fileName, content.getBytes(UTF_8), -1);
     } else {
-      zkClient.create(fileName, content.getBytes(UTF_8), PERSISTENT, true);
+      zk.create(fileName, content.getBytes(UTF_8), ZooDefs.Ids.OPEN_ACL_UNSAFE, PERSISTENT);
     }
   }
 
   public Optional<String> getFileContent(String fileName) throws Exception {
-    if (!zkClient.exists(fileName, true))
+    if (zk.exists(fileName, false) == null)
       return Optional.empty();
-
-    byte[] data = zkClient.getData(fileName, null, null, true);
+    byte[] data = zk.getData(fileName, false, null);
     return Optional.of(new String(data, UTF_8));
   }
 }

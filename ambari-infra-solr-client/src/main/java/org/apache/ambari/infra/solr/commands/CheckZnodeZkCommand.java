@@ -20,9 +20,8 @@ package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.AmbariSolrCloudClientException;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooKeeper;
 
 public class CheckZnodeZkCommand extends AbstractZookeeperRetryCommand<Boolean> {
 
@@ -34,12 +33,12 @@ public class CheckZnodeZkCommand extends AbstractZookeeperRetryCommand<Boolean> 
   }
 
   @Override
-  protected Boolean executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected Boolean executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     try {
-      return zkClient.exists(this.znode, false);
+      return zk.exists(this.znode, false) != null;
     } catch (KeeperException e) {
       throw new AmbariSolrCloudClientException("Exception during checking znode, " +
-        "Check zookeeper servers are running (n+1/2) or zookeeper quorum has established or not.", e);
+        "check if ZooKeeper servers are running or if the quorum has been established.", e);
     }
   }
 }

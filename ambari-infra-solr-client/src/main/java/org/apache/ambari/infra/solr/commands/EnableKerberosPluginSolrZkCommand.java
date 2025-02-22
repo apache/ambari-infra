@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,9 +21,9 @@ package org.apache.ambari.infra.solr.commands;
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,37 +39,37 @@ public class EnableKerberosPluginSolrZkCommand extends AbstractZookeeperRetryCom
   }
 
   @Override
-  protected String executeZkCommand(AmbariSolrCloudClient client, SolrZkClient zkClient, SolrZooKeeper solrZooKeeper) throws Exception {
+  protected String executeZkCommand(AmbariSolrCloudClient client, ZooKeeper zk) throws Exception {
     String result = "";
     String filePath = client.getZnode() + SECURITY_JSON;
-    String fileContent = getFileContentFromZnode(zkClient, filePath);
+    String fileContent = getFileContentFromZnode(zk, filePath);
     String securityContent = getFileContent(client.getSecurityJsonLocation());
     if (client.isSecure()) {
       if (!fileContent.equals(securityContent)) {
-        putFileContent(zkClient, filePath, securityContent);
+        putFileContent(zk, filePath, securityContent);
       }
       result = securityContent;
     } else {
       if (!fileContent.equals(UNSECURE_CONTENT)) {
-        putFileContent(zkClient, filePath, UNSECURE_CONTENT);
+        putFileContent(zk, filePath, UNSECURE_CONTENT);
       }
       result = UNSECURE_CONTENT;
     }
     return result;
   }
 
-  private void putFileContent(SolrZkClient zkClient, String fileName, String content) throws Exception {
-    if (zkClient.exists(fileName, true)) {
-      zkClient.setData(fileName, content.getBytes(StandardCharsets.UTF_8), true);
+  private void putFileContent(ZooKeeper zk, String fileName, String content) throws Exception {
+    if (zk.exists(fileName, false) != null) {
+      zk.setData(fileName, content.getBytes(StandardCharsets.UTF_8), -1);
     } else {
-      zkClient.create(fileName, content.getBytes(StandardCharsets.UTF_8), CreateMode.PERSISTENT, true);
+      zk.create(fileName, content.getBytes(StandardCharsets.UTF_8), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
     }
   }
 
-  private String getFileContentFromZnode(SolrZkClient zkClient, String fileName) throws Exception {
+  private String getFileContentFromZnode(ZooKeeper zk, String fileName) throws Exception {
     String result;
-    if (zkClient.exists(fileName, true)) {
-      byte[] data = zkClient.getData(fileName, null, null, true);
+    if (zk.exists(fileName, false) != null) {
+      byte[] data = zk.getData(fileName, false, null);
       result = new String(data, StandardCharsets.UTF_8);
     } else {
       result = UNSECURE_CONTENT;
@@ -80,7 +80,7 @@ public class EnableKerberosPluginSolrZkCommand extends AbstractZookeeperRetryCom
   private String getFileContent(String fileLocation) throws IOException {
     File securityJson = new File(fileLocation);
     if (StringUtils.isNotEmpty(fileLocation) && securityJson.exists()) {
-      return FileUtils.readFileToString(securityJson);
+      return FileUtils.readFileToString(securityJson, StandardCharsets.UTF_8);
     } else {
       return UNSECURE_CONTENT;
     }

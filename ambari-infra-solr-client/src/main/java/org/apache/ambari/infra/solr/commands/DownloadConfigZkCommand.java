@@ -20,11 +20,13 @@ package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
 import org.apache.ambari.infra.solr.AmbariSolrCloudClientException;
-import org.apache.solr.common.cloud.ZkConfigManager;
+import org.apache.zookeeper.ZooKeeper;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class DownloadConfigZkCommand extends AbstractZookeeperConfigCommand<String> {
 
@@ -33,15 +35,55 @@ public class DownloadConfigZkCommand extends AbstractZookeeperConfigCommand<Stri
   }
 
   @Override
-  protected String executeZkConfigCommand(ZkConfigManager zkConfigManager, AmbariSolrCloudClient client) throws Exception {
+  protected String executeZkConfigCommand(ZooKeeper zk, AmbariSolrCloudClient client) throws Exception {
     Path configDir = Paths.get(client.getConfigDir());
     String configSet = client.getConfigSet();
+    String zkBasePath = "/configs/" + configSet;
     try {
-      zkConfigManager.downloadConfigDir(configSet, configDir);
+      if (!Files.exists(configDir)) {
+        Files.createDirectories(configDir);
+      }
+      downloadRecursively(zk, zkBasePath, configDir);
       return configDir.toString();
-    } catch (IOException e){
-      throw new AmbariSolrCloudClientException("Error downloading configuration set, check Solr Znode has started or not " +
-        "(starting Solr (for Log Search) is responsible to create the Znode)" ,e);
+    } catch (IOException e) {
+      throw new AmbariSolrCloudClientException("Error downloading configuration set, check if Solr Znode has started or not", e);
+    }
+  }
+
+  /**
+   * Pobiera rekurencyjnie zawartość drzewa znodów z ZooKeepera i zapisuje ją do lokalnego katalogu.
+   *
+   * @param zk       instancja ZooKeeper
+   * @param zkPath   bieżąca ścieżka w ZooKeeperze (np. /configs/<configSet>)
+   * @param localPath lokalna ścieżka, do której zapisywana będzie zawartość
+   * @throws Exception w przypadku błędów podczas pobierania lub zapisu
+   */
+  private void downloadRecursively(ZooKeeper zk, String zkPath, Path localPath) throws Exception {
+    // Pobierz dane dla bieżącego węzła (jeśli istnieją)
+    byte[] data = null;
+    try {
+      data = zk.getData(zkPath, false, null);
+    } catch (Exception e) {
+      // Jeśli węzeł nie posiada danych lub wystąpi inny błąd, kontynuujemy
+    }
+    List<String> children = zk.getChildren(zkPath, false);
+    if (children.isEmpty()) {
+      // Jeśli węzeł jest liściem – zapisz dane do pliku (lub utwórz pusty plik, jeśli brak danych)
+      if (data != null) {
+        Files.write(localPath, data);
+      } else if (!Files.exists(localPath)) {
+        Files.createFile(localPath);
+      }
+    } else {
+      // Jeśli węzeł ma dzieci – traktujemy go jako katalog
+      if (!Files.exists(localPath)) {
+        Files.createDirectories(localPath);
+      }
+      for (String child : children) {
+        String childZkPath = zkPath.endsWith("/") ? zkPath + child : zkPath + "/" + child;
+        Path childLocalPath = localPath.resolve(child);
+        downloadRecursively(zk, childZkPath, childLocalPath);
+      }
     }
   }
 }

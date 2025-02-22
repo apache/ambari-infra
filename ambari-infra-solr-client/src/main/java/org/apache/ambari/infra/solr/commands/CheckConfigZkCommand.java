@@ -19,7 +19,7 @@
 package org.apache.ambari.infra.solr.commands;
 
 import org.apache.ambari.infra.solr.AmbariSolrCloudClient;
-import org.apache.solr.common.cloud.ZkConfigManager;
+import org.apache.zookeeper.ZooKeeper;
 
 public class CheckConfigZkCommand extends AbstractZookeeperConfigCommand<Boolean> {
 
@@ -28,7 +28,9 @@ public class CheckConfigZkCommand extends AbstractZookeeperConfigCommand<Boolean
   }
 
   @Override
-  protected Boolean executeZkConfigCommand(ZkConfigManager zkConfigManager, AmbariSolrCloudClient client) throws Exception {
-    return zkConfigManager.configExists(client.getConfigSet());
+  protected Boolean executeZkConfigCommand(ZooKeeper zk, AmbariSolrCloudClient client) throws Exception {
+    // Przyjmujemy, że konfiguracje są przechowywane pod ścieżką /configs/<configSet>
+    String configSetPath = "/configs/" + client.getConfigSet();
+    return zk.exists(configSetPath, false) != null;
   }
 }
