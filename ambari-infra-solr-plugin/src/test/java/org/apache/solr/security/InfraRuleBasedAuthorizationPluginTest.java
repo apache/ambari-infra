@@ -174,10 +174,10 @@ public class InfraRuleBasedAuthorizationPluginTest {
   }
 
   private void checkRules(Map<String, Object> values, int expected) {
-    checkRules(values,expected,(Map) Utils.fromJSONString(PERMISSIONS));
+    checkRules(values, expected, (Map) Utils.fromJSONString(PERMISSIONS));
   }
 
-  private void checkRules(Map<String, Object> values, int expected, Map<String ,Object> permissions) {
+  private void checkRules(Map<String, Object> values, int expected, Map<String, Object> permissions) {
     AuthorizationContext context = new MockAuthorizationContext(values);
     InfraRuleBasedAuthorizationPlugin plugin = new InfraRuleBasedAuthorizationPlugin();
     plugin.init(permissions);
@@ -186,7 +186,7 @@ public class InfraRuleBasedAuthorizationPluginTest {
   }
 
   private static class MockAuthorizationContext extends AuthorizationContext {
-    private final Map<String,Object> values;
+    private final Map<String, Object> values;
 
     private MockAuthorizationContext(Map<String, Object> values) {
       this.values = values;
@@ -195,7 +195,7 @@ public class InfraRuleBasedAuthorizationPluginTest {
     @Override
     public SolrParams getParams() {
       SolrParams params = (SolrParams) values.get("params");
-      return params == null ?  new MapSolrParams(new HashMap<String, String>()) : params;
+      return params == null ? new MapSolrParams(new HashMap<String, String>()) : params;
     }
 
     @Override
@@ -203,6 +203,12 @@ public class InfraRuleBasedAuthorizationPluginTest {
       Object userPrincipal = values.get("userPrincipal");
       return userPrincipal == null ? null :
         new AuthenticationToken(String.valueOf(userPrincipal), String.format("%s%s", String.valueOf(userPrincipal), "/hostname@EXAMPLE.COM"), "kerberos");
+    }
+
+    @Override
+    public String getUserName() {
+      Object userPrincipal = values.get("userPrincipal");
+      return userPrincipal == null ? null : String.valueOf(userPrincipal);
     }
 
     @Override
@@ -229,7 +235,7 @@ public class InfraRuleBasedAuthorizationPluginTest {
     public List<CollectionRequest> getCollectionRequests() {
       Object collectionRequests = values.get("collectionRequests");
       if (collectionRequests instanceof String) {
-        return singletonList(new CollectionRequest((String)collectionRequests));
+        return singletonList(new CollectionRequest((String) collectionRequests));
       }
       return (List<CollectionRequest>) collectionRequests;
     }
@@ -255,5 +261,4 @@ public class InfraRuleBasedAuthorizationPluginTest {
       return handler instanceof String ? (PermissionNameProvider) request -> PermissionNameProvider.Name.get((String) handler) : handler;
     }
   }
-
 }
