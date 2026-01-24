@@ -24,7 +24,6 @@ import org.apache.solr.common.cloud.ZkConfigManager;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class DownloadConfigZkCommand extends AbstractZookeeperConfigCommand<String> {
 
@@ -34,7 +33,7 @@ public class DownloadConfigZkCommand extends AbstractZookeeperConfigCommand<Stri
 
   @Override
   protected String executeZkConfigCommand(ZkConfigManager zkConfigManager, AmbariSolrCloudClient client) throws Exception {
-    Path configDir = Paths.get(client.getConfigDir());
+    Path configDir = Path.of(client.getConfigDir());
     String configSet = client.getConfigSet();
     try {
       zkConfigManager.downloadConfigDir(configSet, configDir);

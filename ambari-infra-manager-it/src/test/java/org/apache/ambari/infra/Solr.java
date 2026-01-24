@@ -24,7 +24,7 @@ import static org.apache.ambari.infra.TestUtil.runCommand;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -86,7 +86,7 @@ public class Solr {
 
   public void createSolrCollection(String collectionName) {
     logger.info("Creating collection");
-    runCommand(new String[]{"docker", "exec", "solr", "solr", "create_collection", "-force", "-c", collectionName, "-d", Paths.get(configSetPath, "configsets", collectionName, "conf").toString(), "-n", collectionName + "_conf"});
+    runCommand(new String[]{"docker", "exec", "solr", "solr", "create_collection", "-force", "-c", collectionName, "-d", Path.of(configSetPath, "configsets", collectionName, "conf").toString(), "-n", collectionName + "_conf"});
   }
 
   public QueryResponse query(SolrQuery query) {

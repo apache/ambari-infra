@@ -21,7 +21,6 @@ package org.apache.ambari.infra.job.dummy;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 
@@ -48,8 +47,8 @@ public class DummyItemWriter implements ItemWriter<String> {
     logger.info("DummyItem writer called (values: {})... wait 1 seconds", values.toString());
     Thread.sleep(1000);
     String outputDirectoryLocation = String.format("%s%s%s%s", infraManagerDataConfig.getDataFolder(), File.separator, "dummyOutput-", new Date().getTime());
-    Path pathToDirectory = Paths.get(outputDirectoryLocation);
-    Path pathToFile = Paths.get(String.format("%s%s%s", outputDirectoryLocation, File.separator, "dummyOutput.txt"));
+    Path pathToDirectory = Path.of(outputDirectoryLocation);
+    Path pathToFile = Path.of(String.format("%s%s%s", outputDirectoryLocation, File.separator, "dummyOutput.txt"));
     Files.createDirectories(pathToDirectory);
     logger.info("Write location to step execution context...");
     stepExecution.getExecutionContext().put("stepOutputLocation", pathToFile.toAbsolutePath().toString());
