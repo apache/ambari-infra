@@ -56,7 +56,7 @@ public class SetAutoScalingZkCommand extends AbstractZookeeperRetryCommand<Strin
     String zFilePath = client.getZnode() + AUTO_SCALING_JSON;
     ZookeeperClient zookeeperClient = new ZookeeperClient(zkClient);
     Optional<String> fileContent = zookeeperClient.getFileContent(zFilePath);
-    if (!fileContent.isPresent() || !contentToUpload.equals(fileContent.get()))
+    if (fileContent.isEmpty() || !contentToUpload.equals(fileContent.get()))
       zookeeperClient.putFileContent(zFilePath, contentToUpload);
 
     return contentToUpload;
