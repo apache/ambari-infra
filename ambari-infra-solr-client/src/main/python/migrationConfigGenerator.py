@@ -70,11 +70,11 @@ def api_accessor(host, username, password, protocol, port):
       logger.debug('Execute {0} {1}'.format(request_type, url))
       if request_body:
         logger.debug('Request body: {0}'.format(request_body))
-      admin_auth = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
+      admin_auth = base64.b64encode(('%s:%s' % (username, password)).encode()).decode().replace('\n', '')
       request = urllib.request.Request(url)
       request.add_header('Authorization', 'Basic %s' % admin_auth)
       request.add_header('X-Requested-By', 'ambari')
-      request.add_data(request_body)
+      request.data = request_body.encode('utf-8')
       request.get_method = lambda: request_type
       response = None
       if protocol == 'https':
