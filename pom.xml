@@ -58,11 +58,6 @@
 
   <repositories>
     <repository>
-      <id>apache-hadoop</id>
-      <name>hdp</name>
-      <url>http://repo.hortonworks.com/content/groups/public/</url>
-    </repository>
-    <repository>
       <id>oss.sonatype.org</id>
       <name>OSS Sonatype Staging</name>
       <url>https://oss.sonatype.org/content/groups/staging</url>
