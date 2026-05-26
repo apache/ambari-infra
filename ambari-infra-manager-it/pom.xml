@@ -33,7 +33,7 @@
 
   <properties>
     <jbehave.version>4.0.5</jbehave.version>
-    <failsafePlugin.version>3.0.0-M1</failsafePlugin.version>
+    <failsafePlugin.version>3.2.5</failsafePlugin.version>
     <infraManager.docker.host>localhost</infraManager.docker.host>
     <stories.location>NONE</stories.location>
     <okhttp.version>2.7.5</okhttp.version>
